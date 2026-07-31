@@ -31,4 +31,4 @@ Production-ready starter templates with Clean Architecture and CI/CD.
 
 ## About
 
-Built and maintained by [Ayush Kumar Sethi](https://github.com/aks5686) — Mobile Technical Architect with 15+ years across iOS, Android, Flutter, React Native, and Capacitor.
+Built and maintained by [Ayush Kumar Sethi](https://github.com/aks5686) — Mobile Technical Architect with 15+ years across iOS, Android, React Native & Flutter.

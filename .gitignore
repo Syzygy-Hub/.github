@@ -1,0 +1,12 @@
+# This repo only holds config files (no Swift/Xcode source or build
+# artifacts live here), so this list is intentionally short.
+
+# OS junk
+.DS_Store
+Thumbs.db
+
+# Editor junk
+.idea/
+.vscode/
+*.swp
+*.swo

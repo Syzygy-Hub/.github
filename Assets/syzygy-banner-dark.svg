@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="300" viewBox="0 0 1200 300">
+  <defs></defs>
+  <circle cx="127.50" cy="150.00" r="57.00" fill="none" stroke="#7C6CF0" stroke-opacity="0.85" stroke-width="13.50"></circle>
+  <circle cx="165.00" cy="150.00" r="57.00" fill="none" stroke="#2FB99B" stroke-opacity="0.85" stroke-width="13.50"></circle>
+  <circle cx="202.50" cy="150.00" r="57.00" fill="none" stroke="#FF7A5C" stroke-opacity="0.85" stroke-width="13.50"></circle>
+  <text x="320" y="142" font-family="Sora" font-weight="800" font-size="72" fill="#F5F5F7" letter-spacing="-1">Syzygy</text>
+  <text x="320" y="192" font-family="Sora" font-weight="500" font-size="30" fill="#B4B8C2">Cross-Platform Mobile Ecosystem</text>
+</svg>

@@ -132,7 +132,7 @@ Production-ready starter that composes all four layers — Clean Architecture, D
 
 Brand assets — logo, icon, banners, and color palette — are hosted in this repository under [`brand/`](https://github.com/Syzygy-Hub/.github/tree/main/brand). See [BRAND_GUIDE.md](https://github.com/Syzygy-Hub/.github/blob/main/brand/BRAND_GUIDE.md) for usage guidelines, clear space rules, minimum sizes, and correct/incorrect usage examples.
 
-**Color palette:** Purple `#7F77DD` · Teal `#1D9E75` · Coral `#D85A30`
+**Color palette:** Purple ![7F77DD](https://img.shields.io/badge/-%237F77DD-7F77DD?style=flat-square) `#7F77DD` · Teal ![1D9E75](https://img.shields.io/badge/-%231D9E75-1D9E75?style=flat-square) `#1D9E75` · Coral ![D85A30](https://img.shields.io/badge/-%23D85A30-D85A30?style=flat-square) `#D85A30`
 
 **Typography:** [Sora](https://fonts.google.com/specimen/Sora) for the wordmark and headings · [Inter](https://fonts.google.com/specimen/Inter) (or the platform system font — SF Pro on iOS, Roboto on Android) for body copy
 

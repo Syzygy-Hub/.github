@@ -190,13 +190,13 @@ All Syzygy-Hub repositories use a standardised label set defined in `.github/lab
 
 | Label | Color | Purpose |
 |---|---|---|
-| `release` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#11a612"/></svg> `#11a612` | Triggers the release pipeline on merge |
-| `feature` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#956de6"/></svg> `#956de6` | New feature or enhancement |
-| `fix` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#d73a4a"/></svg> `#d73a4a` | Bug fix |
-| `chore` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#e4e669"/></svg> `#e4e669` | Maintenance, refactoring, tooling |
-| `documentation` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#6e72cc"/></svg> `#6e72cc` | Documentation changes only |
-| `breaking` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#b60205"/></svg> `#b60205` | Breaking API changes — MAJOR version bump required |
-| `dependencies` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#179d99"/></svg> `#179d99` | Dependency updates |
+| `release` | ![11a612](https://img.shields.io/badge/-%2311a612-11a612?style=flat-square) `#11a612` | Triggers the release pipeline on merge |
+| `feature` | ![956de6](https://img.shields.io/badge/-%23956de6-956de6?style=flat-square) `#956de6` | New feature or enhancement |
+| `fix` | ![d73a4a](https://img.shields.io/badge/-%23d73a4a-d73a4a?style=flat-square) `#d73a4a` | Bug fix |
+| `chore` | ![e4e669](https://img.shields.io/badge/-%23e4e669-e4e669?style=flat-square) `#e4e669` | Maintenance, refactoring, tooling |
+| `documentation` | ![6e72cc](https://img.shields.io/badge/-%236e72cc-6e72cc?style=flat-square) `#6e72cc` | Documentation changes only |
+| `breaking` | ![b60205](https://img.shields.io/badge/-%23b60205-b60205?style=flat-square) `#b60205` | Breaking API changes — MAJOR version bump required |
+| `dependencies` | ![179d99](https://img.shields.io/badge/-%23179d99-179d99?style=flat-square) `#179d99` | Dependency updates |
 
 To add a new label to all repos: add it to `.github/labels.yml` and push to `main`. The sync workflow runs automatically.
 

@@ -24,7 +24,7 @@ Syzygy is a four-layer architecture. Each layer is independent and can be used w
 
 ```
   syzygy-ui-*       syzygy-core-*    syzygy-services-*
-  Presentation       App foundation   External world
+  Presentation     App infrastructure  External world
         │                 │                 │
         └─────────────────┼─────────────────┘
                           │
@@ -34,7 +34,7 @@ Syzygy is a four-layer architecture. Each layer is independent and can be used w
 
 - **Foundation** — contracts, primitives, shared types. Zero implementation. Every other layer depends on this.
 - **UI** — visual component libraries with design tokens, theming, and dark mode. Zero business logic.
-- **Core** — app foundation, navigation, DI, security, architecture utilities. *(in progress)*
+- **Core** — app infrastructure, navigation, DI, security, architecture utilities. *(in progress)*
 - **Services** — networking, storage, analytics, OS integrations. *(in progress)*
 
 Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
@@ -59,8 +59,8 @@ Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.
        ┌─────────┐     ┌─────────┐     ┌──────────┐
        │   UI    │     │  CORE   │     │ SERVICES │
        │         │     │         │     │          │
-       │ Visual  │     │ Business│     │ External │
-       │ system  │     │ logic   │     │ world    │
+       │ Visual  │     │   App   │     │ External │
+       │ system  │     │ infra.  │     │ world    │
        └────┬────┘     └────┬────┘     └─────┬────┘
             │               │                │
             └───────────────┼────────────────┘

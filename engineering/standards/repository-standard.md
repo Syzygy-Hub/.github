@@ -103,7 +103,7 @@ Remove deprecated UIColorToken.separator
 
 | Prefix | When |
 |---|---|
-| `release: vX.X.X — description` | Release commits only |
+| `release: X.X.X — description` | Release commits only |
 | `fix: description` | Bug fixes |
 | `chore: description` | Maintenance, dependency updates, tooling |
 | `docs: description` | Documentation only changes |

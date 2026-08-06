@@ -30,8 +30,8 @@ This is the single authoritative description of the Syzygy ecosystem architectur
      │ syzygy-   │   │  syzygy-   │   │   syzygy-    │
      │  ui-*     │   │  core-*    │   │ services-*   │
      │           │   │            │   │              │
-     │ Visual    │   │ App        │   │ External     │
-     │ system    │   │ foundation │   │ world        │
+     │ Visual    │   │ App infra- │   │ External     │
+     │ system    │   │ structure  │   │ world        │
      └─────┬─────┘   └─────┬──────┘   └──────┬───────┘
            │               │                  │
            └───────────────┼──────────────────┘
@@ -113,7 +113,7 @@ These are laws. They are never broken.
 
 ### Core — `syzygy-core-{platform}`
 
-**What it is:** App foundation — the utilities and architecture scaffolding every app rebuilds from scratch.
+**What it is:** App infrastructure — the utilities and architecture scaffolding every app rebuilds from scratch.
 
 **What belongs here:**
 - Extensions on standard library types

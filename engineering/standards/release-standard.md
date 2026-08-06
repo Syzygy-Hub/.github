@@ -5,98 +5,102 @@
 
 # Syzygy Release Standard
 
----
-
-## Release Trigger
-
-A release is triggered by a commit on `main` whose message starts with:
-
-```
-release: vX.X.X — description
-```
-
-The `v` prefix appears in the commit message for readability. It is stripped from the actual git tag.
-
-**Examples:**
-```
-release: v1.0.0 — initial release
-release: v2.4.0 — theming system across all platforms
-release: v2.4.1 — fix overlayAlpha on Android ModalDialog
-```
+All Syzygy repositories follow this release process. Releases are triggered automatically by CI when a pull request carrying the `release` label is merged to `main`.
 
 ---
 
-## Tag Format
+## Release Flow
 
-```
-X.X.X
-```
+1. Create branch `release/X.X.X` from `main`
+2. Bump the version number in the platform manifest:
+   - iOS: no inline version field — the git tag is the version; bump `syzygy.yml` and CHANGELOG only
+   - Android: `build.gradle.kts`
+   - React Native: `package.json`
+   - Flutter: `pubspec.yaml`
+3. Bump the version in `syzygy.yml`
+4. Update `CHANGELOG.md`: move the contents of `[Unreleased]` into a new `[X.X.X] - YYYY-MM-DD` section at the top, then reset `[Unreleased]` to empty above it. `[Unreleased]` always remains in the file — never delete it.
+5. Ensure the README version badge reflects the new version
+6. Open a Pull Request → `main`
+7. Add the label **`release`** to the PR
+8. Get review and approval
+9. Merge to `main`
+10. CI detects the `release` label on the merged PR → creates git tag `X.X.X` → publishes the package to the registry → creates a GitHub Release using the `[X.X.X]` CHANGELOG entry as the release notes body
 
-No `v` prefix. The tag `1.0.0` is correct. The tag `v1.0.0` is wrong.
+---
+
+## Branch Naming
+
+| Purpose | Format |
+|---|---|
+| Release | `release/X.X.X` |
+| Feature | `feature/description` |
+| Bug fix | `fix/description` |
+| Chore / tooling | `chore/description` |
 
 ---
 
 ## Version Format
 
-Semantic versioning: `major.minor.patch`
+Semantic versioning: `major.minor.patch`. **No `v` prefix** — not in tags, not in `syzygy.yml`, not in CHANGELOG headers.
 
 | Increment | When |
 |---|---|
-| `patch` | Fixes and non-breaking additions only |
-| `minor` | Any breaking change, minimum — also new modules or significant additions |
-| `major` | Reserved for fundamental architectural changes |
+| `MAJOR` | Breaking API changes — consumers must update their code |
+| `MINOR` | Backwards-compatible new features |
+| `PATCH` | Backwards-compatible fixes only |
 
 ---
 
-## Pre-Release Checklist
+## The `release` PR Label
 
-Complete all of these before committing the release trigger:
-
-1. **Bump the version** in the package manifest (Package.swift / build.gradle.kts / package.json / pubspec.yaml). Never leave this to CI.
-2. **Move Unreleased entries** to the new version header in CHANGELOG.md with today's date.
-3. **Verify the build passes** locally before pushing.
-4. **Verify tests pass** locally before pushing.
+- Label name: **`release`**
+- Must be added to the PR **before merge** for CI to trigger the release pipeline
+- PRs without the `release` label merge normally — no release is created
+- The label is not removed after merge; CI reads it from the merged PR event
 
 ---
 
-## CI Gate
+## CHANGELOG Rules
 
-Tag creation and GitHub Release happen only after CI passes on `main`. The CI workflow:
-1. Builds and tests on push to `main`
-2. If triggered by a tag matching `[0-9]+.[0-9]+.[0-9]+`, creates a GitHub Release with auto-generated release notes
+See [changelog-standard.md](changelog-standard.md) for full CHANGELOG formatting rules, including the `[Unreleased]` pattern, section order, entry format, and reference link format.
 
----
-
-## Multi-Platform Release Order
-
-When releasing across all four platforms simultaneously:
-
-```
-1. Android
-2. Flutter
-3. React Native
-4. iOS
-```
-
-Each platform release is a separate commit and tag. Stagger by a few minutes to keep the CI queues manageable.
+Summary:
+- No `v` prefix in version headers — `[1.0.0]` not `[v1.0.0]`
+- Date format: `YYYY-MM-DD`
+- Include only sections with entries: `Added` | `Changed` | `Fixed` | `Removed`
 
 ---
 
-## Breaking Changes
+## Tag Format
 
-- Increment `minor` version at minimum
-- Add a `> **Breaking change:**` callout at the top of the CHANGELOG version entry
-- Document the migration path in the CHANGELOG entry, not just what changed
+- No `v` prefix: `1.0.0` not `v1.0.0`
+- Created automatically by CI after merge — **never create tags manually**
 
 ---
 
-## What CI Does (and Does Not Do)
+## Version Sync Checklist
 
-| CI does | CI does not do |
-|---|---|
-| Build on every push/PR | Bump the version |
-| Test on every push/PR | Update CHANGELOG |
-| Lint on every push/PR | Create tags |
-| Create GitHub Release on tag | Push to registries (Foundation layer — future) |
+All of the following must be updated and in sync before the release PR is merged:
 
-The developer owns the version, CHANGELOG, and tag. CI validates and publishes.
+- [ ] Platform manifest (`build.gradle.kts` / `package.json` / `pubspec.yaml`) where applicable
+- [ ] `syzygy.yml` — `version:` field
+- [ ] `CHANGELOG.md` — `[Unreleased]` contents moved into new `[X.X.X]` entry, `[Unreleased]` reset to empty
+- [ ] `README.md` — version badge updated to `X.X.X`
+
+---
+
+## Multi-Platform Releases
+
+Each platform releases independently. Synchronize releases only when there is an intentional cross-platform reason — for example when a Foundation version bump requires all consuming repos to update simultaneously.
+
+---
+
+## What CI Does on Release PR Merge
+
+When a PR with the `release` label is merged to `main`, CI:
+
+1. Detects the `release` label on the merged PR event
+2. Reads the version from the platform manifest
+3. Creates git tag `X.X.X`
+4. Publishes the package to the registry (JitPack / pub.dev / npm / SPM via the tag)
+5. Creates a GitHub Release with the `[X.X.X]` CHANGELOG entry as the release notes body

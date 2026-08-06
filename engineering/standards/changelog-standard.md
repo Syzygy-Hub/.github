@@ -14,39 +14,61 @@ Every Syzygy repository CHANGELOG follows the [Keep a Changelog](https://keepach
 ```markdown
 # Changelog
 
+All notable changes to `{repo-name}` are documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+---
+
 ## [Unreleased]
 
-## [X.X.X] - YYYY-MM-DD
+## [1.0.0] - YYYY-MM-DD
 
 ### Added
-- Add X to Y
+- Added X to Y
 
 ### Changed
-- Change X to use Y instead of Z
+- Changed X to use Y instead of Z
 
 ### Fixed
-- Fix X crashing when Y is nil
+- Fixed X crashing when Y is nil
 
 ### Removed
-- Remove deprecated X
+- Removed deprecated X
+
+[Unreleased]: https://github.com/Syzygy-Hub/{repo}/compare/1.0.0...HEAD
+[1.0.0]: https://github.com/Syzygy-Hub/{repo}/releases/tag/1.0.0
 ```
 
 ---
 
 ## Rules
 
-### Version header
+### Version Header
+
 - Format: `[X.X.X]` — no `v` prefix
 - Always followed by ` - YYYY-MM-DD`
-- Most recent version at the top
+- Most recent version at the top, below `[Unreleased]`
 
-### Unreleased section
-- Always present at the top
-- Accumulates changes since the last release
-- Becomes the next version header on release — rename it, don't delete it
+### [Unreleased] Section
+
+- **Always present** at the top of the file, above all version entries — never delete it
+- All in-progress changes are added here during development, before a version is assigned
+- **On release:** move the contents of `[Unreleased]` into a new `[X.X.X] - YYYY-MM-DD` section, then reset `[Unreleased]` to empty above it
+
+```markdown
+## [Unreleased]
+
+## [1.1.0] - 2026-09-01
+
+### Added
+- Added `SyzygyLogger` — structured logging contract with level filtering
+```
 
 ### Sections
+
 Include only the sections that have entries. Standard sections in order:
+
 1. **Added** — new features, new types, new modules
 2. **Changed** — changes to existing behaviour
 3. **Fixed** — bug fixes
@@ -54,7 +76,8 @@ Include only the sections that have entries. Standard sections in order:
 
 Do not add custom sections. Do not add a "Known Limitations" section — fix it, defer it to a future version, or document it as a code comment. It has no place in a CHANGELOG.
 
-### Entry format
+### Entry Format
+
 - One line per change
 - Past tense: "Added X", "Fixed Y crashing when Z", "Removed deprecated X"
 - Imperative is also acceptable for consistency with commit messages: "Add X", "Fix Y"
@@ -68,7 +91,8 @@ Do not add custom sections. Do not add a "Known Limitations" section — fix it,
 - Added `NetworkClientProtocol` — async network execution contract
 ```
 
-### Breaking changes
+### Breaking Changes
+
 Mark clearly at the top of the version entry:
 
 ```markdown
@@ -80,7 +104,26 @@ Mark clearly at the top of the version entry:
 - Changed `AuthProvider.state` from `AuthState` to `AnyPublisher<AuthState, Never>`
 ```
 
-### What does not belong in a CHANGELOG
+### Reference Links
+
+Every version entry and the `[Unreleased]` section must have a corresponding reference link at the bottom of the file. Links enable clickable version headers in rendered Markdown.
+
+Format:
+
+```markdown
+[Unreleased]: https://github.com/Syzygy-Hub/{repo}/compare/{latest-tag}...HEAD
+[1.1.0]: https://github.com/Syzygy-Hub/{repo}/releases/tag/1.1.0
+[1.0.0]: https://github.com/Syzygy-Hub/{repo}/releases/tag/1.0.0
+```
+
+Rules:
+- `[Unreleased]` always points to `compare/{latest-tag}...HEAD` — update the tag each time a new version is released
+- Each version link points to its GitHub Release tag
+- Links appear in descending version order at the bottom of the file
+- No `v` prefix in tag URLs — `releases/tag/1.0.0` not `releases/tag/v1.0.0`
+
+### What Does Not Belong in a CHANGELOG
+
 - Internal implementation notes
 - Future plans or roadmap items
 - Names of contributors (not a project convention here)

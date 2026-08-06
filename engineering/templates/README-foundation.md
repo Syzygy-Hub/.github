@@ -1,9 +1,9 @@
-[![Build](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-foundation-{platform}/ci.yml?label=build&style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/actions)
-[![Tests](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-foundation-{platform}/ci.yml?label=tests&style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/actions)
-[![Coverage](https://img.shields.io/badge/coverage-reported-2F6FED?style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/actions)
-[![Version](https://img.shields.io/badge/version-{VERSION}-2F6FED?style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/releases)
-[![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
-<!-- Language badge — uncomment the line for your platform:
+[![{PLATFORM}](https://img.shields.io/badge/{PLATFORM}-{VALUE}-2F6FED?style=flat)](link) [![{LANGUAGE}](https://img.shields.io/badge/{LANGUAGE}-{VERSION}-2F6FED?style=flat)](link) [![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-foundation-{platform}/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/actions/workflows/ci.yml) [![Version](https://img.shields.io/badge/version-{VERSION}-2F6FED?style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/releases) [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
+<!-- Platform and Language badge options — replace the {PLATFORM}/{LANGUAGE} placeholders above with one of these:
+[![iOS](https://img.shields.io/badge/iOS-Swift-FA7343?style=flat&logo=apple&logoColor=white)](https://developer.apple.com/ios/)
+[![Android](https://img.shields.io/badge/Android-Kotlin-7F52FF?style=flat&logo=android&logoColor=white)](https://developer.android.com/)
+[![React Native](https://img.shields.io/badge/React%20Native-TypeScript-3178C6?style=flat&logo=react&logoColor=white)](https://reactnative.dev/)
+[![Flutter](https://img.shields.io/badge/Flutter-Dart-0175C2?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
 [![Swift](https://img.shields.io/badge/Swift-6.0-FA7343?logo=swift&logoColor=white)](https://swift.org)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
@@ -17,24 +17,27 @@
 
 # syzygy-foundation-{platform}
 
-
 Foundational contracts, primitives, and shared types for the Syzygy {PLATFORM_NAME} ecosystem.
 
-## What is it?
+## About
 
-syzygy-foundation-{platform} defines the contracts that every other Syzygy layer depends on — protocols, value types, enums, and error types only. There is zero implementation here. No business logic. No platform API calls.
+syzygy-foundation-{platform} defines the contracts every other Syzygy layer depends on — protocols, value types, enums, and error types only. There is zero implementation here: no business logic, no platform API calls. The Foundation layer is what makes UI, Core, and Services independently replaceable. Each layer imports Foundation and implements its contracts — nothing more. If you are building a custom implementation of a Syzygy contract, you import Foundation directly and conform to the relevant protocol.
 
-The Foundation layer is what makes UI, Core, and Services independently replaceable. Each layer imports Foundation and implements its contracts — nothing more.
+## Platforms
 
-## Why would I use it?
+| Platform | Min Version | Package Manager | Status |
+|---|---|---|---|
+| {platform} | {version}+ | {package_manager} | ✅ Supported |
 
-You use it by depending on it from syzygy-ui-{platform}, syzygy-core-{platform}, or syzygy-services-{platform}. You don't import Foundation directly in your app — your app imports the layer that implements the contracts you need.
+> Replace `{platform}`, `{version}`, and `{package_manager}` with the values from your `syzygy.yml` manifest.
 
-If you are building a custom implementation of a Syzygy contract — say, a custom analytics provider — you import Foundation directly and conform to `AnalyticsProvider`.
+## Requirements
 
-## Platform Support
+- {Platform} {version}+
+- {Language} {version}+
+- {Tooling} {version}+
 
-**Requires:** {PLATFORM_REQUIREMENT}
+> Fill in values from your `syzygy.yml` and platform documentation.
 
 ## Installation
 
@@ -45,14 +48,6 @@ If you are building a custom implementation of a Syzygy contract — say, a cust
 ```{LANGUAGE}
 {INSTALLATION_SNIPPET}
 ```
-
-## What Does It Contain?
-
-- **Primitives** — `SyzygyID<T>`, `Page<T>`, `PaginationRequest`, `SyzygyTimestamp`, `SyzygyDuration`, `TimeProvider`, `ValidationResult`, `ValidationRule`
-- **Contracts** — `NetworkClientProtocol`, `StorageProvider`, `AuthProvider`, `AnalyticsProvider`, `LoggerProtocol`, `ConnectivityProvider`
-- **Shared Types** — `SyzygyEnvironment`, `SyzygyConfiguration`, `SyzygyBuildInfo`, `SyzygyVersion`
-- **Errors** — `SyzygyError`, `SyzygyErrorCode`, `SyzygyErrorSeverity`
-- **Testing** — `MockNetworkClient`, `MockLogger`, `MockAuthProvider`, `MockStorageProvider`, `MockConnectivityProvider`, `SpyAnalyticsProvider`, `FixtureProvider`, `FixedTimeProvider` (separate import — test targets only)
 
 ## Architecture
 
@@ -66,7 +61,15 @@ If you are building a custom implementation of a Syzygy contract — say, a cust
 
 For the full ecosystem architecture see [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md).
 
-## Examples
+## API
+
+- **Primitives** — `SyzygyID<T>`, `Page<T>`, `PaginationRequest`, `SyzygyTimestamp`, `SyzygyDuration`, `TimeProvider`, `ValidationResult`, `ValidationRule`
+- **Contracts** — `NetworkClientProtocol`, `StorageProvider`, `AuthProvider`, `AnalyticsProvider`, `LoggerProtocol`, `ConnectivityProvider`
+- **Shared Types** — `SyzygyEnvironment`, `SyzygyConfiguration`, `SyzygyBuildInfo`, `SyzygyVersion`
+- **Errors** — `SyzygyError`, `SyzygyErrorCode`, `SyzygyErrorSeverity`
+- **Testing** — `MockNetworkClient`, `MockLogger`, `MockAuthProvider`, `MockStorageProvider`, `MockConnectivityProvider`, `SpyAnalyticsProvider`, `FixtureProvider`, `FixedTimeProvider` (separate import — test targets only)
+
+## Usage
 
 ### Implementing a contract
 
@@ -86,16 +89,27 @@ For the full ecosystem architecture see [syzygy-ecosystem.md](https://github.com
 {MOCK_NETWORK_CLIENT_TEST_EXAMPLE}
 ```
 
-## Contributing & Releases
+## Platform Notes
 
-Release trigger: `release: vX.X.X — description` commit on `main`.
-Tag format: `X.X.X` (no `v` prefix).
-See [Syzygy Release Standard](https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/release-standard.md).
+{PLATFORM_SPECIFIC_API_DIFFERENCES}
+
+## Contributing
+
+Contributions are welcome. Please follow the [Syzygy engineering standards](https://github.com/Syzygy-Hub/.github/tree/main/engineering/standards) when submitting pull requests.
+
+## Releases
+
+Releases follow a label-based PR flow:
+
+1. Create branch `release/X.X.X`
+2. Bump version in manifest and `syzygy.yml`
+3. Update `CHANGELOG.md`
+4. Open PR → `main` with label: `release`
+5. Get approval and merge
+6. CI tags `X.X.X`, publishes, and creates the GitHub Release automatically
+
+See the [Syzygy Release Standard](https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/release-standard.md) for full details.
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
-
-## Author
-
-[Ayush Kumar Sethi](https://aks5686.github.io) — [github.com/aks5686](https://github.com/aks5686)

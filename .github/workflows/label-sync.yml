@@ -14,8 +14,42 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Sync labels to all Syzygy-Hub repos
-        uses: EndBug/label-sync@v2
-        with:
-          config-file: .github/labels.yml
-          delete-other-labels: false
-          token: ${{ secrets.SYZYGY_LABEL_SYNC }}
+        env:
+          GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
+        run: |
+          REPOS=(
+            "Syzygy-Hub/syzygy-foundation-ios"
+            "Syzygy-Hub/syzygy-foundation-android"
+            "Syzygy-Hub/syzygy-foundation-rn"
+            "Syzygy-Hub/syzygy-foundation-flutter"
+            "Syzygy-Hub/syzygy-ui-ios"
+            "Syzygy-Hub/syzygy-ui-android"
+            "Syzygy-Hub/syzygy-ui-rn"
+            "Syzygy-Hub/syzygy-ui-flutter"
+            "Syzygy-Hub/syzygy-base-ios"
+            "Syzygy-Hub/syzygy-base-android"
+            "Syzygy-Hub/syzygy-base-rn"
+            "Syzygy-Hub/syzygy-base-flutter"
+          )
+
+          # Parse labels.yml and create/update each label in each repo
+          while IFS= read -r line; do
+            if [[ $line == "- name:"* ]]; then
+              NAME="${line#*- name: }"
+              NAME="${NAME//\"/}"
+            elif [[ $line == "  color:"* ]]; then
+              COLOR="${line#*color: }"
+              COLOR="${COLOR//\"/}"
+            elif [[ $line == "  description:"* ]]; then
+              DESC="${line#*description: }"
+              DESC="${DESC//\"/}"
+              # Apply to all repos
+              for REPO in "${REPOS[@]}"; do
+                gh label create "$NAME" \
+                  --color "$COLOR" \
+                  --description "$DESC" \
+                  --repo "$REPO" \
+                  --force 2>/dev/null || true
+              done
+            fi
+          done < .github/labels.yml

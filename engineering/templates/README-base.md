@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light.svg" alt="Syzygy" width="600">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
 [![Build](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-base-{platform}/ci.yml?label=build&style=flat)](https://github.com/Syzygy-Hub/syzygy-base-{platform}/actions)
@@ -18,10 +18,6 @@
 
 # syzygy-base-{platform}
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-2400.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-2400.png" alt="Syzygy">
-</picture>
 
 Production-ready {PLATFORM_NAME} app scaffold with all four Syzygy layers pre-wired — fork it and start building features on day one.
 

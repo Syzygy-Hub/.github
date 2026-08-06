@@ -1,11 +1,17 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light.svg" alt="Syzygy" width="600">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
-# Syzygy-Hub / .github
+# Syzygy Hub
 
 This repository is the Syzygy-Hub organisation infrastructure. It is the single source of truth for brand assets, engineering standards, README templates, reusable CI workflows, and lint tooling across every Syzygy repo.
+
+---
+
+## Org Profile — [`profile/`](profile/)
+
+[`profile/README.md`](profile/README.md) is the public-facing Syzygy-Hub GitHub organisation page — the page visitors see at [github.com/Syzygy-Hub](https://github.com/Syzygy-Hub).
 
 ---
 
@@ -52,19 +58,6 @@ Copy the appropriate template when creating a new Syzygy repo.
 
 ---
 
-## Reusable CI Workflows — [`.github/workflows/`](.github/workflows/)
-
-Platform-specific GitHub Actions workflows called by individual repos via `workflow_call`.
-
-- [`ios-ci.yml`](.github/workflows/ios-ci.yml) — build, SwiftLint, test, optional coverage summary
-- [`android-ci.yml`](.github/workflows/android-ci.yml) — build, ktlint, test, optional JaCoCo coverage summary
-- [`rn-ci.yml`](.github/workflows/rn-ci.yml) — typecheck, lint, test, optional Jest coverage summary
-- [`flutter-ci.yml`](.github/workflows/flutter-ci.yml) — analyze (--fatal-warnings), test, optional lcov coverage summary
-
-Coverage is informational only — no threshold enforcement. Results appear in the GitHub Actions job summary.
-
----
-
 ## Lint Tooling — [`engineering/tooling/`](engineering/tooling/)
 
 Canonical lint and analysis configs. Consuming repos store a local copy under `tooling/{platform}/` and CI fetches the canonical version fresh on each run.
@@ -76,6 +69,13 @@ Canonical lint and analysis configs. Consuming repos store a local copy under `t
 
 ---
 
-## Org Profile — [`profile/`](profile/)
+## Reusable CI Workflows — [`.github/workflows/`](.github/workflows/)
 
-[`profile/README.md`](profile/README.md) is the public-facing Syzygy-Hub GitHub organisation page — the page visitors see at [github.com/Syzygy-Hub](https://github.com/Syzygy-Hub).
+Platform-specific GitHub Actions workflows called by individual repos via `workflow_call`.
+
+- [`ios-ci.yml`](.github/workflows/ios-ci.yml) — build, SwiftLint, test, optional coverage summary
+- [`android-ci.yml`](.github/workflows/android-ci.yml) — build, ktlint, test, optional JaCoCo coverage summary
+- [`rn-ci.yml`](.github/workflows/rn-ci.yml) — typecheck, lint, test, optional Jest coverage summary
+- [`flutter-ci.yml`](.github/workflows/flutter-ci.yml) — analyze (--fatal-warnings), test, optional lcov coverage summary
+
+Coverage is informational only — no threshold enforcement. Results appear in the GitHub Actions job summary.

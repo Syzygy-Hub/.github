@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light.svg" alt="Syzygy" width="600">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
 [![Build](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-foundation-{platform}/ci.yml?label=build&style=flat)](https://github.com/Syzygy-Hub/syzygy-foundation-{platform}/actions)
@@ -18,10 +18,6 @@
 
 # syzygy-foundation-{platform}
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-2400.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-2400.png" alt="Syzygy">
-</picture>
 
 Foundational contracts, primitives, and shared types for the Syzygy {PLATFORM_NAME} ecosystem.
 

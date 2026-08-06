@@ -1,16 +1,15 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light.svg" alt="Syzygy" width="600">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
+[![iOS](https://img.shields.io/badge/iOS-Swift-FA7343?style=flat&logo=swift&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-ios)
+[![Android](https://img.shields.io/badge/Android-Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-android)
+[![React Native](https://img.shields.io/badge/React%20Native-TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-rn)
+[![Flutter](https://img.shields.io/badge/Flutter-Dart-0175C2?style=flat&logo=dart&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-flutter)
 [![Repos](https://img.shields.io/badge/Repos-20-2F6FED?style=flat&logo=github&logoColor=white)](https://github.com/orgs/Syzygy-Hub/repositories)
-[![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20Android%20%7C%20RN%20%7C%20Flutter-2F6FED?style=flat)](https://github.com/Syzygy-Hub)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](https://github.com/Syzygy-Hub/.github/blob/main/LICENSE)
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-2400.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-2400.png" alt="Syzygy">
-</picture>
 
 Syzygy is a cross-platform mobile ecosystem — production-ready Foundation, UI, Core and Service libraries, plus starter templates, spanning iOS, Android, React Native, and Flutter.
 
@@ -128,8 +127,8 @@ Production-ready starter that composes all four layers — Clean Architecture, D
 ## Brand
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon.svg" alt="Syzygy Icon" height="64">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon-512.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon-512.png" alt="Syzygy Icon" height="64">
 </picture>
 
 Brand assets — logo, icon, banners, and color palette — are hosted in this repository under [`brand/`](https://github.com/Syzygy-Hub/.github/tree/main/brand). See [BRAND_GUIDE.md](https://github.com/Syzygy-Hub/.github/blob/main/brand/BRAND_GUIDE.md) for usage guidelines, clear space rules, minimum sizes, and correct/incorrect usage examples.

@@ -13,26 +13,25 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Remove deprecated Syzygy labels from all repos
+        env:
+          GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
+        run: |
+          REPOS=$(gh repo list Syzygy-Hub --limit 100 --json nameWithOwner -q '.[].nameWithOwner')
+          DEPRECATED=("feature" "fix" "documentation" "breaking")
+
+          for REPO in $REPOS; do
+            for LABEL in "${DEPRECATED[@]}"; do
+              gh label delete "$LABEL" --repo "$REPO" --yes 2>/dev/null || true
+            done
+          done
+
       - name: Sync labels to all Syzygy-Hub repos
         env:
           GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
         run: |
-          REPOS=(
-            "Syzygy-Hub/syzygy-foundation-ios"
-            "Syzygy-Hub/syzygy-foundation-android"
-            "Syzygy-Hub/syzygy-foundation-rn"
-            "Syzygy-Hub/syzygy-foundation-flutter"
-            "Syzygy-Hub/syzygy-ui-ios"
-            "Syzygy-Hub/syzygy-ui-android"
-            "Syzygy-Hub/syzygy-ui-rn"
-            "Syzygy-Hub/syzygy-ui-flutter"
-            "Syzygy-Hub/syzygy-base-ios"
-            "Syzygy-Hub/syzygy-base-android"
-            "Syzygy-Hub/syzygy-base-rn"
-            "Syzygy-Hub/syzygy-base-flutter"
-          )
+          REPOS=$(gh repo list Syzygy-Hub --limit 100 --json nameWithOwner -q '.[].nameWithOwner')
 
-          # Parse labels.yml and create/update each label in each repo
           while IFS= read -r line; do
             if [[ $line == "- name:"* ]]; then
               NAME="${line#*- name: }"
@@ -43,8 +42,7 @@ jobs:
             elif [[ $line == "  description:"* ]]; then
               DESC="${line#*description: }"
               DESC="${DESC//\"/}"
-              # Apply to all repos
-              for REPO in "${REPOS[@]}"; do
+              for REPO in $REPOS; do
                 gh label create "$NAME" \
                   --color "$COLOR" \
                   --description "$DESC" \

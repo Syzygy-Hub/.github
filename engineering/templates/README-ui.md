@@ -1,27 +1,25 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
-</picture>
-
 [![Build](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-ui-{platform}/ci.yml?label=build&style=flat)](https://github.com/Syzygy-Hub/syzygy-ui-{platform}/actions)
 [![Tests](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-ui-{platform}/ci.yml?label=tests&style=flat)](https://github.com/Syzygy-Hub/syzygy-ui-{platform}/actions)
 [![Coverage](https://img.shields.io/badge/coverage-reported-2F6FED?style=flat)](https://github.com/Syzygy-Hub/syzygy-ui-{platform}/actions)
 [![Version](https://img.shields.io/badge/version-{VERSION}-2F6FED?style=flat)](https://github.com/Syzygy-Hub/syzygy-ui-{platform}/releases)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](LICENSE)
-<!-- Language badge — replace {LANGUAGE_BADGE} with one of:
-     iOS:     [![Swift](https://img.shields.io/badge/Swift-6.0-FA7343?style=flat&logo=swift&logoColor=white)](https://swift.org)
-     Android: [![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://kotlinlang.org)
-     RN:      [![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat&logo=typescript&logoColor=white)](https://www.typescriptlang.org)
-     Flutter: [![Dart](https://img.shields.io/badge/Dart-3.0-0175C2?style=flat&logo=dart&logoColor=white)](https://dart.dev)
+<!-- Language badge — uncomment the line for your platform:
+[![Swift](https://img.shields.io/badge/Swift-6.0-FA7343?logo=swift&logoColor=white)](https://swift.org)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.0-7F52FF?logo=kotlin&logoColor=white)](https://kotlinlang.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?logo=typescript&logoColor=white)](https://typescriptlang.org)
+[![Dart](https://img.shields.io/badge/Dart-3.0-0175C2?logo=dart&logoColor=white)](https://dart.dev)
 -->
-{LANGUAGE_BADGE}
-<!-- Package manager badge — replace {PACKAGE_MANAGER_BADGE} with one of:
-     iOS:     [![SPM](https://img.shields.io/badge/SPM-compatible-FA7343?style=flat)](https://swift.org/package-manager)
-     Android: [![JitPack](https://img.shields.io/badge/JitPack-compatible-4CAF50?style=flat)](https://jitpack.io)
-     RN:      [![npm](https://img.shields.io/badge/npm-{PACKAGE_NAME}-CB3837?style=flat&logo=npm&logoColor=white)](https://www.npmjs.com/package/{PACKAGE_NAME})
-     Flutter: [![pub.dev](https://img.shields.io/badge/pub.dev-{PACKAGE_NAME}-0175C2?style=flat&logo=dart&logoColor=white)](https://pub.dev/packages/{PACKAGE_NAME})
+<!-- Package manager badge — uncomment the line for your platform:
+[![SPM](https://img.shields.io/badge/SPM-compatible-FA7343?logo=swift&logoColor=white)](https://swift.org/package-manager)
+[![JitPack](https://img.shields.io/badge/JitPack-compatible-4CAF50)](https://jitpack.io)
+[![npm](https://img.shields.io/badge/npm-{PACKAGE_NAME}-CB3837?logo=npm&logoColor=white)](https://npmjs.com)
+[![pub.dev](https://img.shields.io/badge/pub.dev-{PACKAGE_NAME}-0175C2?logo=dart&logoColor=white)](https://pub.dev)
 -->
-{PACKAGE_MANAGER_BADGE}
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
+</picture>
 
 # syzygy-ui-{platform}
 

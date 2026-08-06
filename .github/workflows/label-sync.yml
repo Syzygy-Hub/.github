@@ -13,33 +13,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Remove deprecated Syzygy labels from all repos
-        env:
-          GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
-        run: |
-          REPOS=$(gh repo list Syzygy-Hub --limit 100 --json nameWithOwner -q '.[].nameWithOwner')
-          DEPRECATED=("feature" "fix" "breaking")
-
-          for REPO in $REPOS; do
-            for LABEL in "${DEPRECATED[@]}"; do
-              gh label delete "$LABEL" --repo "$REPO" --yes 2>/dev/null || true
-            done
-          done
-
-      - name: Restore GitHub default labels removed by mistake
-        env:
-          GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
-        run: |
-          REPOS=$(gh repo list Syzygy-Hub --limit 100 --json nameWithOwner -q '.[].nameWithOwner')
-
-          for REPO in $REPOS; do
-            gh label create "documentation" \
-              --color "0075ca" \
-              --description "Improvements or additions to documentation" \
-              --repo "$REPO" \
-              --force 2>/dev/null || true
-          done
-
       - name: Sync labels to all Syzygy-Hub repos
         env:
           GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}

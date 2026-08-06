@@ -33,10 +33,10 @@ Always shields.io. Always in this order:
 Platform badge | Language badge | CI badge | Version badge | License badge
 ```
 
-**Platform badge** — label is the platform name, message is the language or framework value. Replace `{PLATFORM}` and `{VALUE}` with real values before publishing:
+**Platform badge** — label is the platform name, message is the language or framework value. Color: `7F77DD` (Syzygy Purple). Replace `{PLATFORM}` and `{VALUE}` with real values before publishing:
 
 ```
-[![{PLATFORM}](https://img.shields.io/badge/{PLATFORM}-{VALUE}-2F6FED?style=flat)](link)
+[![{PLATFORM}](https://img.shields.io/badge/{PLATFORM}-{VALUE}-7F77DD?style=flat)](link)
 ```
 
 Examples:
@@ -47,10 +47,10 @@ Examples:
 [![Flutter](https://img.shields.io/badge/Flutter-Dart-0175C2?style=flat&logo=flutter&logoColor=white)](https://flutter.dev/)
 ```
 
-**Language badge** — label is the language name, message is the version. Always includes logo. Replace `{LANGUAGE}` and `{VERSION}` before publishing:
+**Language badge** — label is the language name, message is the version. Always includes logo. Color: `1D9E75` (Syzygy Teal). Replace `{LANGUAGE}` and `{VERSION}` before publishing:
 
 ```
-[![{LANGUAGE}](https://img.shields.io/badge/{LANGUAGE}-{VERSION}-2F6FED?style=flat)](link)
+[![{LANGUAGE}](https://img.shields.io/badge/{LANGUAGE}-{VERSION}-1D9E75?style=flat)](link)
 ```
 
 Examples:
@@ -69,10 +69,10 @@ Examples:
 
 All five badges must appear on a **single line** with no blank lines between them. The commented options block (platform/language/package manager alternatives) follows on the next line immediately after the badge line — no blank line between them.
 
-**Version badge** — always color `2F6FED`:
+**Version badge** — color `D85A30` (Syzygy Coral):
 
 ```
-[![Version](https://img.shields.io/badge/version-{X.X.X}-2F6FED?style=flat)](https://github.com/Syzygy-Hub/{repo}/releases)
+[![Version](https://img.shields.io/badge/version-{X.X.X}-D85A30?style=flat)](https://github.com/Syzygy-Hub/{repo}/releases)
 ```
 
 **License badge** — always MIT, always color `green`:

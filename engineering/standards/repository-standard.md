@@ -190,13 +190,13 @@ All Syzygy-Hub repositories use a standardised label set defined in `.github/lab
 
 | Label | Color | Purpose |
 |---|---|---|
-| `release` | `#11a612` green | Triggers the release pipeline on merge |
-| `feature` | `#956de6` purple | New feature or enhancement |
-| `fix` | `#d73a4a` red | Bug fix |
-| `chore` | `#e4e669` yellow | Maintenance, refactoring, tooling |
-| `documentation` | `#6e72cc` indigo | Documentation changes only |
-| `breaking` | `#b60205` dark red | Breaking API changes — MAJOR version bump required |
-| `dependencies` | `#179d99` teal | Dependency updates |
+| `release` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#11a612"/></svg> `#11a612` | Triggers the release pipeline on merge |
+| `feature` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#956de6"/></svg> `#956de6` | New feature or enhancement |
+| `fix` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#d73a4a"/></svg> `#d73a4a` | Bug fix |
+| `chore` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#e4e669"/></svg> `#e4e669` | Maintenance, refactoring, tooling |
+| `documentation` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#6e72cc"/></svg> `#6e72cc` | Documentation changes only |
+| `breaking` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#b60205"/></svg> `#b60205` | Breaking API changes — MAJOR version bump required |
+| `dependencies` | <svg width="12" height="12" style="vertical-align:middle;margin-right:4px"><circle cx="6" cy="6" r="6" fill="#179d99"/></svg> `#179d99` | Dependency updates |
 
 To add a new label to all repos: add it to `.github/labels.yml` and push to `main`. The sync workflow runs automatically.
 

@@ -1,0 +1,58 @@
+name: React Native CI
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run Jest with coverage and post a summary'
+      node_version:
+        required: false
+        type: string
+        default: '20'
+        description: 'Node.js version to use'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node_version }}
+
+      - name: Fetch ESLint and Prettier configs
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.eslintrc.json \
+            -o .eslintrc.json
+          curl -fsSL \
+            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.prettierrc \
+            -o .prettierrc
+          # Remove any local eslintrc.js that would take precedence over the fetched .json
+          rm -f .eslintrc.js .eslintrc.cjs
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Test with coverage
+        if: ${{ inputs.coverage }}
+        run: |
+          npm test -- --coverage --coverageReporters=text-summary 2>&1 | tee coverage-output.txt
+          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          grep -A 20 "Coverage summary" coverage-output.txt >> "$GITHUB_STEP_SUMMARY" \
+            || echo "No coverage summary found — ensure Jest is configured with coverage reporters." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Test without coverage
+        if: ${{ !inputs.coverage }}
+        run: npm test

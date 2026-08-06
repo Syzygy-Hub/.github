@@ -1,0 +1,82 @@
+name: iOS CI
+
+on:
+  workflow_call:
+    inputs:
+      scheme:
+        required: true
+        type: string
+        description: 'The Swift package name (used to locate test binaries for coverage)'
+      swift_version:
+        required: false
+        type: string
+        default: '6.0'
+        description: 'Swift tools version (informational — determined by Package.swift)'
+      coverage:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to generate a coverage report in the job summary'
+
+# Coverage note (judgment call 2):
+# The test binary path varies by package name and number of targets.
+# We use `find .build -name "*.profdata"` to locate profdata dynamically
+# rather than hardcoding a path, which handles packages with multiple
+# test targets gracefully.
+
+jobs:
+  build-and-test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fetch SwiftLint config
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/ios/.swiftlint.yml \
+            -o .swiftlint.yml
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Lint
+        run: swiftlint --config .swiftlint.yml
+
+      - name: Build
+        run: swift build
+
+      - name: Test with coverage
+        if: ${{ inputs.coverage }}
+        run: |
+          swift test --enable-code-coverage
+
+          # Locate profdata dynamically — works for any package name
+          PROFDATA=$(find .build -name "default.profdata" | head -1)
+          if [ -z "$PROFDATA" ]; then
+            echo "No profdata found — skipping coverage report"
+            exit 0
+          fi
+
+          # Find all test binaries
+          BINARIES=$(find .build/debug -name "*.xctest" -path "*/Contents/MacOS/*" 2>/dev/null | head -5)
+          if [ -z "$BINARIES" ]; then
+            # SPM on Linux — test binary is a plain executable
+            BINARIES=$(find .build/debug -name "*PackageTests" -type f 2>/dev/null | head -1)
+          fi
+
+          if [ -n "$BINARIES" ]; then
+            echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+            for BIN in $BINARIES; do
+              xcrun llvm-cov report "$BIN" \
+                -instr-profile "$PROFDATA" \
+                --ignore-filename-regex='\.build|Tests' \
+                >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
+            done
+          else
+            echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+            echo "Coverage data generated at: $PROFDATA" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Test without coverage
+        if: ${{ !inputs.coverage }}
+        run: swift test

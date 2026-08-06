@@ -1,0 +1,12 @@
+# Syzygy Repository Manifest
+# Copy this file to your repo root, rename it syzygy.yml, and fill in the values.
+# Schema: https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/repository-standard.md
+
+name: syzygy-{type}-{platform}
+type: {ui|foundation|core|services|base}
+platform: {ios|android|rn|flutter}
+language: {swift|kotlin|typescript|dart}
+package_manager: {spm|jitpack|npm|pub.dev}
+license: MIT
+version: 1.0.0
+syzygy_foundation: ">=1.0.0"   # remove this line for foundation repos

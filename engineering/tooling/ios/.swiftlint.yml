@@ -1,0 +1,62 @@
+# SwiftLint configuration shared across all Syzygy Swift/SwiftUI repos
+# (syzygy-base-ios, syzygy-ui-ios, and any future iOS libraries/apps).
+#
+# See README.md for how consuming repos should fetch this file in CI,
+# since SwiftLint has no native support for remote config URLs.
+
+# Opt-in rules are disabled by default in SwiftLint; explicitly enable the
+# ones that catch real bugs or meaningfully improve consistency without
+# being noisy on typical SwiftUI code.
+opt_in_rules:
+  - empty_count              # prefer `.isEmpty` over `.count == 0` — clearer and avoids O(n) count on some collections
+  - closure_spacing           # consistent `{ }` spacing around closures
+  - explicit_init             # avoid redundant `.init(...)` when the type can be inferred another way
+  - redundant_type_annotation # flags `let x: String = "foo"` where the type is already obvious
+
+disabled_rules:
+  - todo # TODO/FIXME comments are a normal part of active development; failing CI on them just encourages deleting the marker instead of the debt
+
+# Force unwrapping and force casting are sometimes legitimate (e.g. static
+# assets, `as!` in tests), so these are warnings, not build-breaking errors.
+force_unwrapping: warning
+force_cast: warning
+
+trailing_whitespace:
+  severity: warning
+trailing_newline: warning
+
+line_length:
+  warning: 120 # SwiftUI view bodies with chained modifiers routinely exceed the SwiftLint default of 100
+  error: 200
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 400 # SwiftUI files mix view + preview + small helpers; 400 gives room before it's a sign to split up
+  error: 600
+
+type_body_length:
+  warning: 250
+  error: 400
+
+function_body_length:
+  warning: 60
+  error: 100
+
+identifier_name:
+  min_length: 2 # allow short but meaningful names like `id`, `vm`
+  excluded:
+    - id
+
+# These paths assume the standard SPM layout (Sources/, Tests/) of a
+# consuming repo. They have no effect within this repo itself — this repo
+# holds no Sources/ or Tests/ of its own; `included`/`excluded` only take
+# effect once a consuming repo fetches this file into its own project root
+# and runs `swiftlint --config swiftlint.yml` from there.
+included:
+  - Sources
+  - Tests
+
+excluded:
+  - .build
+  - .swiftpm

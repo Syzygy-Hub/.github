@@ -1,0 +1,56 @@
+name: Flutter CI
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run flutter test --coverage and post a summary'
+      flutter_version:
+        required: false
+        type: string
+        default: 'stable'
+        description: 'Flutter version or channel (stable, beta, or a version like 3.22.0)'
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ inputs.flutter_version }}
+          channel: stable
+
+      - name: Fetch analysis config
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/flutter/analysis_options.yaml \
+            -o analysis_options.yaml
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Analyze
+        run: flutter analyze --fatal-warnings
+
+      - name: Test with coverage
+        if: ${{ inputs.coverage }}
+        run: |
+          flutter test --coverage
+          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          if command -v lcov &> /dev/null; then
+            lcov --summary coverage/lcov.info 2>&1 | tee coverage-summary.txt
+            cat coverage-summary.txt >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Coverage data generated at \`coverage/lcov.info\`" >> "$GITHUB_STEP_SUMMARY"
+            echo "Install lcov to display a line-coverage summary." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Test without coverage
+        if: ${{ !inputs.coverage }}
+        run: flutter test

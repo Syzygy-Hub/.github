@@ -1,13 +1,15 @@
-[![iOS](https://img.shields.io/badge/iOS-Swift%206%20%7C%20SwiftUI-blue?style=flat&logo=swift&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-ios)
-[![Android](https://img.shields.io/badge/Android-Kotlin%20%7C%20Compose-brightgreen?style=flat&logo=android&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-android)
-[![React Native](https://img.shields.io/badge/React%20Native-TypeScript-61DAFB?style=flat&logo=react&logoColor=black)](https://github.com/Syzygy-Hub/syzygy-ui-rn)
-[![Flutter](https://img.shields.io/badge/Flutter-Dart-02569B?style=flat&logo=flutter&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-flutter)
-[![Repos](https://img.shields.io/badge/Repos-12-orange?style=flat&logo=github&logoColor=white)](https://github.com/orgs/Syzygy-Hub/repositories)
-[![License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/Syzygy-Hub/syzygy-ui-ios/blob/main/LICENSE)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark.svg">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light.svg" alt="Syzygy" width="600">
+</picture>
+
+[![Repos](https://img.shields.io/badge/Repos-20-2F6FED?style=flat&logo=github&logoColor=white)](https://github.com/orgs/Syzygy-Hub/repositories)
+[![Platforms](https://img.shields.io/badge/Platforms-iOS%20%7C%20Android%20%7C%20RN%20%7C%20Flutter-2F6FED?style=flat)](https://github.com/Syzygy-Hub)
+[![License](https://img.shields.io/badge/License-MIT-green?style=flat)](https://github.com/Syzygy-Hub/.github/blob/main/LICENSE)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/Assets/syzygy-banner-dark-2400.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/Assets/syzygy-banner-light-2400.png" alt="Syzygy">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-2400.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-2400.png" alt="Syzygy">
 </picture>
 
 Syzygy is a cross-platform mobile ecosystem — production-ready Foundation, UI, Core and Service libraries, plus starter templates, spanning iOS, Android, React Native, and Flutter.
@@ -17,6 +19,27 @@ The name comes from the astronomical term for when celestial bodies align — re
 ## Why Syzygy
 
 Every UI library ships with zero third-party dependencies and the same shared token system — colors, typography, spacing, radius — reproduced consistently across all four platforms, with full Dark Mode support built in from the start. Component naming and API shape stay deliberately consistent cross-platform (the same problem is solved the same way in SwiftUI, Jetpack Compose, React Native, and Flutter), and every repo shares the same CI pipeline and tag-gated release process.
+
+## Ecosystem
+
+Syzygy is a four-layer architecture. Each layer is independent and can be used without the others.
+
+```
+  syzygy-ui-*       syzygy-core-*    syzygy-services-*
+  Presentation       App foundation   External world
+        │                 │                 │
+        └─────────────────┼─────────────────┘
+                          │
+               syzygy-foundation-*
+               Contracts & primitives
+```
+
+- **Foundation** — contracts, primitives, shared types. Zero implementation. Every other layer depends on this.
+- **UI** — visual component libraries with design tokens, theming, and dark mode. Zero business logic.
+- **Core** — app foundation, navigation, DI, security, architecture utilities. *(in progress)*
+- **Services** — networking, storage, analytics, OS integrations. *(in progress)*
+
+Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
 
 ## Architecture
 
@@ -30,9 +53,6 @@ Every UI library ships with zero third-party dependencies and the same shared to
                  │ Contracts           │
                  │ Shared types        │
                  │ Errors              │
-                 │ Constants           │
-                 │ Lint / formatting   │
-                 │ Build conventions   │
                  └──────────┬──────────┘
                             │
             ┌───────────────┼────────────────┐
@@ -50,12 +70,6 @@ Every UI library ships with zero third-party dependencies and the same shared to
                             ▼
                   ┌──────────────────┐
                   │  SYZYGY BASE APP │
-                  │                  │
-                  │ Composition      │
-                  │ Architecture     │
-                  │ DI               │
-                  │ Features         │
-                  │ Configuration    │
                   └──────────────────┘
 ```
 
@@ -64,7 +78,7 @@ Every UI library ships with zero third-party dependencies and the same shared to
 | Layer | iOS | Android | React Native | Flutter |
 |---|:---:|:---:|:---:|:---:|
 | UI | ✅ | ✅ | ✅ | ✅ |
-| Foundation | 🚧 | 🚧 | 🚧 | 🚧 |
+| Foundation | ✅ | ✅ | ✅ | ✅ |
 | Core | ⬜ | ⬜ | ⬜ | ⬜ |
 | Services | ⬜ | ⬜ | ⬜ | ⬜ |
 | Base App | 🚧 | 🚧 | 🚧 | 🚧 |
@@ -72,36 +86,36 @@ Every UI library ships with zero third-party dependencies and the same shared to
 ✅ Available &nbsp;·&nbsp; 🚧 In progress &nbsp;·&nbsp; ⬜ Not started
 
 ### Foundation
-Primitives, contracts, shared types, errors, constants, lint and build conventions — the base every other layer depends on.
+Primitives, contracts, shared types, errors — the base every other layer depends on.
 
-- [syzygy-foundation-ios](https://github.com/Syzygy-Hub/syzygy-foundation-ios)
-- [syzygy-foundation-android](https://github.com/Syzygy-Hub/syzygy-foundation-android)
-- [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn)
-- [syzygy-foundation-flutter](https://github.com/Syzygy-Hub/syzygy-foundation-flutter)
+- [syzygy-foundation-ios](https://github.com/Syzygy-Hub/syzygy-foundation-ios) — v1.0.0
+- [syzygy-foundation-android](https://github.com/Syzygy-Hub/syzygy-foundation-android) — v1.0.0
+- [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn) — v1.0.0
+- [syzygy-foundation-flutter](https://github.com/Syzygy-Hub/syzygy-foundation-flutter) — v1.0.0
 
 ### UI
 Component libraries with design tokens, theming, and dark mode support.
 
-- [syzygy-ui-ios](https://github.com/Syzygy-Hub/syzygy-ui-ios) — Swift 6 · SwiftUI
-- [syzygy-ui-android](https://github.com/Syzygy-Hub/syzygy-ui-android) — Kotlin · Jetpack Compose
-- [syzygy-ui-rn](https://github.com/Syzygy-Hub/syzygy-ui-rn) — React Native · TypeScript
-- [syzygy-ui-flutter](https://github.com/Syzygy-Hub/syzygy-ui-flutter) — Flutter · Dart
+- [syzygy-ui-ios](https://github.com/Syzygy-Hub/syzygy-ui-ios) — Swift 6 · SwiftUI · v2.4.0
+- [syzygy-ui-android](https://github.com/Syzygy-Hub/syzygy-ui-android) — Kotlin · Jetpack Compose · v2.4.0
+- [syzygy-ui-rn](https://github.com/Syzygy-Hub/syzygy-ui-rn) — React Native · TypeScript · v2.4.0
+- [syzygy-ui-flutter](https://github.com/Syzygy-Hub/syzygy-ui-flutter) — Flutter · Dart · v2.4.0
 
 ### Core
-App Core — navigation, state management, dependency injection, and shared business logic.
+App foundation — navigation, state management, dependency injection, and architecture utilities.
 
-- syzygy-core-ios
-- syzygy-core-android
-- syzygy-core-rn
-- syzygy-core-flutter
+- syzygy-core-ios *(coming)*
+- syzygy-core-android *(coming)*
+- syzygy-core-rn *(coming)*
+- syzygy-core-flutter *(coming)*
 
 ### Services
-External world integrations — networking, storage, analytics, authentication, and third-party SDKs.
+External world integrations — networking, storage, analytics, authentication, and OS services.
 
-- syzygy-services-ios
-- syzygy-services-android
-- syzygy-services-rn
-- syzygy-services-flutter
+- syzygy-services-ios *(coming)*
+- syzygy-services-android *(coming)*
+- syzygy-services-rn *(coming)*
+- syzygy-services-flutter *(coming)*
 
 ### Base App
 Production-ready starter that composes all four layers — Clean Architecture, DI wiring, feature scaffolding, and CI/CD.
@@ -114,11 +128,11 @@ Production-ready starter that composes all four layers — Clean Architecture, D
 ## Brand
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/Assets/syzygy-icon.svg">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/Assets/syzygy-icon.svg" alt="Syzygy Icon" height="64">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon.svg">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon.svg" alt="Syzygy Icon" height="64">
 </picture>
 
-Brand assets — logo, icon, banners, and color palette — are hosted in this repository under [`Assets/`](https://github.com/Syzygy-Hub/.github/tree/main/Assets). See [BRAND_GUIDE.md](https://github.com/Syzygy-Hub/.github/blob/main/BRAND_GUIDE.md) for usage guidelines, clear space rules, minimum sizes, and correct/incorrect usage examples.
+Brand assets — logo, icon, banners, and color palette — are hosted in this repository under [`brand/`](https://github.com/Syzygy-Hub/.github/tree/main/brand). See [BRAND_GUIDE.md](https://github.com/Syzygy-Hub/.github/blob/main/brand/BRAND_GUIDE.md) for usage guidelines, clear space rules, minimum sizes, and correct/incorrect usage examples.
 
 **Color palette:** Purple `#7F77DD` · Teal `#1D9E75` · Coral `#D85A30`
 

@@ -1,12 +1,24 @@
 # This repo only holds config files (no Swift/Xcode source or build
 # artifacts live here), so this list is intentionally short.
 
-# OS junk
+# macOS artifacts
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
 Thumbs.db
 
-# Editor junk
+# Editor artifacts
 .idea/
 .vscode/
 *.swp
 *.swo
+*~
+
+# Fetched tooling artifacts
+# These files are fetched by CI at runtime from this repo and should
+# not be committed in consuming repos under these names.
+.swiftlint.yml.fetched
+.eslintrc.json.fetched
+analysis_options.yaml.fetched

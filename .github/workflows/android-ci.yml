@@ -1,0 +1,62 @@
+name: Android CI
+
+on:
+  workflow_call:
+    inputs:
+      coverage:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to run jacocoTestReport and post a summary'
+
+# JaCoCo note (judgment call 3):
+# The `jacocoTestReport` task must exist in the consuming repo's build.gradle.kts.
+# This workflow cannot add the JaCoCo plugin — it can only invoke tasks that
+# already exist. Consuming repos must add:
+#
+#   plugins { id("jacoco") }
+#   tasks.jacocoTestReport { ... }
+#
+# to their build.gradle.kts before coverage reporting will work.
+# If the task does not exist, the coverage step will fail gracefully with a
+# Gradle "task not found" error, not a silent pass.
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+
+      - name: Fetch ktlint config
+        run: |
+          curl -fsSL \
+            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/android/.editorconfig \
+            -o .editorconfig
+
+      - name: Build
+        run: ./gradlew build
+
+      - name: Test
+        run: ./gradlew test
+
+      - name: ktlint check
+        run: ./gradlew ktlintCheck
+
+      - name: Coverage report
+        if: ${{ inputs.coverage }}
+        run: |
+          ./gradlew jacocoTestReport
+          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          echo "Coverage report generated at \`app/build/reports/jacoco/\`" >> "$GITHUB_STEP_SUMMARY"
+          # Print line coverage summary if the XML report exists
+          REPORT=$(find . -name "jacocoTestReport.xml" | head -1)
+          if [ -n "$REPORT" ]; then
+            echo "" >> "$GITHUB_STEP_SUMMARY"
+            grep -o 'type="LINE"[^/]*/>' "$REPORT" | head -1 >> "$GITHUB_STEP_SUMMARY" || true
+          fi

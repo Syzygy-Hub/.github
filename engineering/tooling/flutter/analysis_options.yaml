@@ -1,0 +1,39 @@
+# Shared Dart/Flutter analysis rules for all Syzygy Flutter repos
+# (syzygy-base-flutter, syzygy-ui-flutter, and future Flutter libraries/apps).
+#
+# See README.md for how consuming repos should reference this file, since
+# `include:` only supports local paths or published pub.dev packages — not
+# a raw remote URL — so this file must be fetched into the repo (or this
+# repo published as a package) before `flutter analyze` can use it directly.
+
+include: package:flutter_lints/flutter.yaml
+
+linter:
+  rules:
+    # Const constructors let Flutter skip rebuilding a subtree entirely —
+    # meaningfully cheaper than the equivalent non-const widget tree.
+    prefer_const_constructors: true
+    prefer_const_constructors_in_immutables: true
+    prefer_const_literals_to_create_immutables: true
+
+    # print() output doesn't get filtered/leveled and is easy to forget in
+    # a PR; prefer a real logger for anything that should ship.
+    avoid_print: true
+
+    # Purely stylistic, but keeps string literals consistent across the
+    # whole Syzygy Dart codebase (matches the single-quote convention used
+    # in the shared ESLint/Prettier config for the RN side).
+    prefer_single_quotes: true
+
+    # Extra rules beyond flutter_lints' defaults that catch common mistakes
+    # without being noisy:
+    always_declare_return_types: true
+    avoid_unnecessary_containers: true # a Container with no styling is just wasted nesting
+    sized_box_for_whitespace: true # SizedBox is cheaper than Container for pure spacing
+    unnecessary_this: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - build/**

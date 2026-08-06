@@ -18,17 +18,4 @@ jobs:
         with:
           config-file: .github/labels.yml
           delete-other-labels: false
-          token: ${{ secrets.GITHUB_TOKEN }}
-          repo: |
-            Syzygy-Hub/syzygy-foundation-ios
-            Syzygy-Hub/syzygy-foundation-android
-            Syzygy-Hub/syzygy-foundation-rn
-            Syzygy-Hub/syzygy-foundation-flutter
-            Syzygy-Hub/syzygy-ui-ios
-            Syzygy-Hub/syzygy-ui-android
-            Syzygy-Hub/syzygy-ui-rn
-            Syzygy-Hub/syzygy-ui-flutter
-            Syzygy-Hub/syzygy-base-ios
-            Syzygy-Hub/syzygy-base-android
-            Syzygy-Hub/syzygy-base-rn
-            Syzygy-Hub/syzygy-base-flutter
+          token: ${{ secrets.SYZYGY_LABEL_SYNC }}

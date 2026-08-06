@@ -1,0 +1,27 @@
+- name: release
+  color: "11a612"
+  description: Triggers the release pipeline on merge to main
+
+- name: feature
+  color: "956de6"
+  description: New feature or enhancement
+
+- name: fix
+  color: "d73a4a"
+  description: Bug fix
+
+- name: chore
+  color: "e4e669"
+  description: Maintenance, refactoring, tooling
+
+- name: documentation
+  color: "6e72cc"
+  description: Documentation changes only
+
+- name: breaking
+  color: "b60205"
+  description: Breaking API changes — MAJOR version bump required
+
+- name: dependencies
+  color: "179d99"
+  description: Dependency updates

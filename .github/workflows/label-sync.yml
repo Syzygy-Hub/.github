@@ -1,0 +1,34 @@
+name: Sync Labels
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - .github/labels.yml
+  workflow_dispatch:
+
+jobs:
+  sync-labels:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Sync labels to all Syzygy-Hub repos
+        uses: EndBug/label-sync@v2
+        with:
+          config-file: .github/labels.yml
+          delete-other-labels: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+          repo: |
+            Syzygy-Hub/syzygy-foundation-ios
+            Syzygy-Hub/syzygy-foundation-android
+            Syzygy-Hub/syzygy-foundation-rn
+            Syzygy-Hub/syzygy-foundation-flutter
+            Syzygy-Hub/syzygy-ui-ios
+            Syzygy-Hub/syzygy-ui-android
+            Syzygy-Hub/syzygy-ui-rn
+            Syzygy-Hub/syzygy-ui-flutter
+            Syzygy-Hub/syzygy-base-ios
+            Syzygy-Hub/syzygy-base-android
+            Syzygy-Hub/syzygy-base-rn
+            Syzygy-Hub/syzygy-base-flutter

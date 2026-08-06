@@ -181,3 +181,23 @@ Each repo fetches its lint config from the canonical source in this repo:
 | Flutter | `engineering/tooling/flutter/analysis_options.yaml` |
 
 Store a local copy under `tooling/{platform}/` in each repo. CI fetches the canonical version fresh on each run.
+
+---
+
+## Labels
+
+All Syzygy-Hub repositories use a standardised label set defined in `.github/labels.yml` and synced automatically via GitHub Actions when `labels.yml` changes on `main`. To sync manually, trigger the **Sync Labels** workflow from the Actions tab.
+
+| Label | Color | Purpose |
+|---|---|---|
+| `release` | `#11a612` green | Triggers the release pipeline on merge |
+| `feature` | `#956de6` purple | New feature or enhancement |
+| `fix` | `#d73a4a` red | Bug fix |
+| `chore` | `#e4e669` yellow | Maintenance, refactoring, tooling |
+| `documentation` | `#6e72cc` indigo | Documentation changes only |
+| `breaking` | `#b60205` dark red | Breaking API changes — MAJOR version bump required |
+| `dependencies` | `#179d99` teal | Dependency updates |
+
+To add a new label to all repos: add it to `.github/labels.yml` and push to `main`. The sync workflow runs automatically.
+
+Do not create repo-specific labels manually — define them in `labels.yml` instead.

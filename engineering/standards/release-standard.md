@@ -5,7 +5,7 @@
 
 # Syzygy Release Standard
 
-All Syzygy repositories follow this release process. Releases are triggered automatically by CI when a pull request carrying the `release` label is merged to `main`.
+All Syzygy repositories follow this release process. Releases are triggered automatically by CI when a PR is merged to `main` with a commit message starting with `release:`.
 
 ---
 
@@ -21,10 +21,9 @@ All Syzygy repositories follow this release process. Releases are triggered auto
 4. Update `CHANGELOG.md`: move the contents of `[Unreleased]` into a new `[X.X.X] - YYYY-MM-DD` section at the top, then reset `[Unreleased]` to empty above it. `[Unreleased]` always remains in the file — never delete it.
 5. Ensure the README version badge reflects the new version
 6. Open a Pull Request → `main`
-7. Add the label **`release`** to the PR
-8. Get review and approval
-9. Merge to `main`
-10. CI detects the `release` label on the merged PR → creates git tag `X.X.X` → publishes the package to the registry → creates a GitHub Release using the `[X.X.X]` CHANGELOG entry as the release notes body
+7. Get review and approval — ensure the build job passes
+8. Merge to `main` with a commit message starting with **`release:`** (e.g. `release: 1.0.1`)
+9. CI detects the `release:` prefix on the push to `main` → reads version from `syzygy.yml` → creates git tag `X.X.X` → creates a GitHub Release using the `[X.X.X]` CHANGELOG entry as the release notes body
 
 ---
 
@@ -51,12 +50,12 @@ Semantic versioning: `major.minor.patch`. **No `v` prefix** — not in tags, not
 
 ---
 
-## The `release` PR Label
+## The `release:` Commit Message Prefix
 
-- Label name: **`release`**
-- Must be added to the PR **before merge** for CI to trigger the release pipeline
-- PRs without the `release` label merge normally — no release is created
-- The label is not removed after merge; CI reads it from the merged PR event
+- The merge commit message **must start with `release:`** for CI to trigger the release pipeline
+- Example: `release: 1.0.1 — CI improvements`
+- Commits without the `release:` prefix merge normally — no release is created
+- CI reads the version from `syzygy.yml` at the time of the push, not from the commit message
 
 ---
 
@@ -95,12 +94,13 @@ Each platform releases independently. Synchronize releases only when there is an
 
 ---
 
-## What CI Does on Release PR Merge
+## What CI Does on Release Merge
 
-When a PR with the `release` label is merged to `main`, CI:
+When a PR is merged to `main` with a commit message starting with `release:`, CI:
 
-1. Detects the `release` label on the merged PR event
-2. Reads the version from the platform manifest
+1. Detects the `release:` prefix on the push-to-main event
+2. Reads the version from `syzygy.yml`
 3. Creates git tag `X.X.X`
-4. Publishes the package to the registry (JitPack / pub.dev / npm / SPM via the tag)
-5. Creates a GitHub Release with the `[X.X.X]` CHANGELOG entry as the release notes body
+4. Creates a GitHub Release with the `[X.X.X]` CHANGELOG entry as the release notes body
+
+> **Note:** Package registry publishing (JitPack / pub.dev / npm) is handled per-platform in each repo's CI workflow where applicable.

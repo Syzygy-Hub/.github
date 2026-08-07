@@ -82,8 +82,10 @@ Every Syzygy repo must contain:
 ├── LICENSE             ← MIT
 └── tooling/            ← platform lint config (fetched from .github)
     └── {platform}/
-        └── .swiftlint.yml | .editorconfig | .eslintrc.json | analysis_options.yaml
+        └── .swiftlint.yml | .editorconfig | .eslintrc.json | .eslintrc.ts.json | analysis_options.yaml
 ```
+
+> **RN repos:** Use `.eslintrc.json` for React Native app repos; use `.eslintrc.ts.json` for pure TypeScript library repos (e.g. `syzygy-foundation-rn`). See the [Tooling](#tooling) section for details.
 
 ---
 
@@ -177,7 +179,204 @@ Each repo fetches its lint config from the canonical source in this repo:
 |---|---|
 | iOS | `engineering/tooling/ios/.swiftlint.yml` |
 | Android | `engineering/tooling/android/.editorconfig` |
-| RN | `engineering/tooling/rn/.eslintrc.json` + `.prettierrc` |
+| RN (app) | `engineering/tooling/rn/.eslintrc.json` + `.prettierrc` |
+| RN (TS library) | `engineering/tooling/rn/.eslintrc.ts.json` + `.prettierrc` |
 | Flutter | `engineering/tooling/flutter/analysis_options.yaml` |
 
 Store a local copy under `tooling/{platform}/` in each repo. CI fetches the canonical version fresh on each run.
+
+### RN ESLint config variants
+
+There are two ESLint configs for RN repos — choose based on what the repo contains:
+
+| Config | File | Use when |
+|---|---|---|
+| React Native app | `.eslintrc.json` | The repo contains React Native components, screens, hooks, or any JSX/TSX. Includes `react`, `react-hooks`, `react-native`, and `import` plugins. |
+| TypeScript library | `.eslintrc.ts.json` | The repo is a pure TypeScript library with no React or JSX (e.g. `syzygy-foundation-rn`, `syzygy-core-rn`). Requires only `@typescript-eslint`. |
+
+**CI fetch — React Native app repo:**
+```yaml
+- name: Lint
+  run: |
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.eslintrc.json \
+      -o .eslintrc.json
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.prettierrc \
+      -o .prettierrc
+    npm run lint
+```
+
+**CI fetch — Pure TypeScript library repo:**
+```yaml
+- name: Lint
+  run: |
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.eslintrc.ts.json \
+      -o .eslintrc.json
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.prettierrc \
+      -o .prettierrc
+    npm run lint
+```
+
+> Always pin `<sha>` to a specific commit SHA rather than `main`. The `.eslintrc.ts.json` is fetched and saved as `.eslintrc.json` at the root so ESLint auto-discovers it without any extra configuration. Both variants share the same `.prettierrc`.
+
+---
+
+## Reusable Workflow Inputs Reference
+
+All four platform CI workflows (`ios-ci.yml`, `android-ci.yml`, `rn-ci.yml`, `flutter-ci.yml`) are reusable via `workflow_call`. This section documents the shared and platform-specific inputs.
+
+### Shared inputs (all platforms)
+
+#### `org_config_sha` — **must be pinned in production**
+
+```yaml
+org_config_sha:
+  required: false
+  type: string
+  default: 'main'
+```
+
+The commit SHA of `Syzygy-Hub/.github` used to fetch tooling configs (SwiftLint, editorconfig, ESLint, analysis options). The `main` default is a **development convenience only** — a bad push to this repo's `main` branch will silently break all callers that rely on the default.
+
+> **Important:** `org_config_sha` only pins the tooling config files fetched during the run (`.swiftlint.yml`, `.editorconfig`, `.eslintrc.json`, `analysis_options.yaml`). It does **not** pin the workflow file itself. The workflow file is resolved from the `uses:` ref — which must also be pinned to a commit SHA for full supply-chain security. See [Pinning the `uses:` ref](#pinning-the-uses-ref) below.
+
+Update `org_config_sha` deliberately when you want to pick up a tooling config change — do not leave it floating.
+
+### Pinning the `uses:` ref
+
+When calling a reusable workflow, GitHub resolves the workflow file from the ref in the `uses:` line. If that ref is a branch name (`@main`), any push to that branch — including malicious or accidental changes — immediately affects every caller on their next run.
+
+**Pin both the `uses:` ref and `org_config_sha` to commit SHAs:**
+
+```yaml
+# ❌ WRONG — workflow file floats on main; a bad push affects all callers immediately
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@main
+    with:
+      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7
+```
+
+```yaml
+# ✅ CORRECT — both the workflow file and tooling configs are pinned
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7 # main
+    with:
+      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7
+```
+
+The SHA in `uses:` and `org_config_sha` will usually be the same value — they both refer to the commit in this repo you want to consume. Keep them in sync when you update to a newer version of the tooling.
+
+**What each pin covers:**
+
+| What is pinned | How it is pinned | What it protects |
+|---|---|---|
+| Workflow file (`rn-ci.yml`, etc.) | `uses: ...@<sha>` | Steps, inputs, logic of the CI workflow itself |
+| Tooling configs (`.swiftlint.yml`, `.eslintrc.json`, etc.) | `org_config_sha` input | Lint rules fetched at runtime by the workflow |
+
+#### `upload_artifacts`
+
+```yaml
+upload_artifacts:
+  required: false
+  type: boolean
+  default: true
+```
+
+Controls whether the workflow uploads build artifacts (test results / coverage) to GitHub Actions. Defaults to `true`. Set to `false` to opt out (e.g. for matrix jobs where only one leg should upload, or to reduce storage usage).
+
+Artifact upload paths per platform:
+
+| Platform | Artifact name | Path uploaded |
+|---|---|---|
+| iOS | `test-artifacts` | `build/reports/` |
+| Android | `test-results` | `build/reports/tests/test` |
+| RN | `coverage` | `coverage/` |
+| Flutter | `coverage` | `coverage/` |
+
+All uploads use `if-no-files-found: warn` — missing paths produce a warning, not a failure. The upload step runs with `if: always()` so artifacts are captured even when tests fail.
+
+#### `coverage`
+
+```yaml
+coverage:
+  required: false
+  type: boolean
+  default: true
+```
+
+Whether to run coverage-enabled tests and post a summary to the job summary. When `false`, the plain test command runs instead.
+
+### Platform-specific inputs
+
+#### Android — `java_version`
+
+```yaml
+java_version:
+  required: false
+  type: string
+  default: '21'
+```
+
+JDK version passed to `actions/setup-java`. Must match the `jvmToolchain()` value in the repo's `build.gradle.kts`:
+
+| Repo type | Value |
+|---|---|
+| Library (`syzygy-foundation-android`) | `'17'` |
+| App / UI repos | `'21'` (default) |
+
+#### Flutter — `flutter_version`
+
+```yaml
+flutter_version:
+  required: false
+  type: string
+  default: 'stable'
+```
+
+Flutter version or channel passed to `subosito/flutter-action`. Pass a specific version string (e.g. `'3.22.0'`) to pin, or a channel name (`stable`, `beta`).
+
+#### RN — `node_version`
+
+```yaml
+node_version:
+  required: false
+  type: string
+  default: '20'
+```
+
+Node.js version passed to `actions/setup-node`.
+
+#### RN — `eslint_config`
+
+```yaml
+eslint_config:
+  required: false
+  type: string
+  default: '.eslintrc.json'
+```
+
+ESLint config filename to fetch from `engineering/tooling/rn/`. See [RN ESLint config variants](#rn-eslint-config-variants) above for when to use each value.
+
+### Example caller — full production usage
+
+```yaml
+# .github/workflows/ci.yml in a consuming repo
+name: CI
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    # Pin the uses: ref to a commit SHA — not @main
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7 # main
+    with:
+      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7   # same SHA — pins tooling configs
+      eslint_config: '.eslintrc.ts.json'   # pure TS library
+      node_version: '20'
+      coverage: true
+      upload_artifacts: true
+```

@@ -13,15 +13,29 @@ on:
         type: string
         default: 'stable'
         description: 'Flutter version or channel (stable, beta, or a version like 3.22.0)'
+      upload_artifacts:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to upload coverage/ as a build artifact. Set to false to opt out.'
+      # WARNING: Always pass a pinned commit SHA in production.
+      # The 'main' default is for local development convenience only.
+      # A bad push to the Syzygy-Hub/.github main branch will silently
+      # affect all callers that rely on the default.
+      org_config_sha:
+        required: false
+        type: string
+        default: 'main'
+        description: 'Commit SHA of Syzygy-Hub/.github to fetch tooling configs from. MUST be a pinned SHA in production — the main default is for development convenience only.'
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+        uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2
         with:
           flutter-version: ${{ inputs.flutter_version }}
           channel: stable
@@ -29,7 +43,7 @@ jobs:
       - name: Fetch analysis config
         run: |
           curl -fsSL \
-            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/flutter/analysis_options.yaml \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/flutter/analysis_options.yaml" \
             -o analysis_options.yaml
 
       - name: Install dependencies
@@ -54,3 +68,11 @@ jobs:
       - name: Test without coverage
         if: ${{ !inputs.coverage }}
         run: flutter test
+
+      - name: Upload coverage
+        if: always() && inputs.upload_artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: warn

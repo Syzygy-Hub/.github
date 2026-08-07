@@ -7,16 +7,25 @@ on:
         required: true
         type: string
         description: 'The Swift package name (used to locate test binaries for coverage)'
-      swift_version:
-        required: false
-        type: string
-        default: '6.0'
-        description: 'Swift tools version (informational — determined by Package.swift)'
       coverage:
         required: false
         type: boolean
         default: true
         description: 'Whether to generate a coverage report in the job summary'
+      upload_artifacts:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to upload build/reports/ as a build artifact. Set to false to opt out.'
+      # WARNING: Always pass a pinned commit SHA in production.
+      # The 'main' default is for local development convenience only.
+      # A bad push to the Syzygy-Hub/.github main branch will silently
+      # affect all callers that rely on the default.
+      org_config_sha:
+        required: false
+        type: string
+        default: 'main'
+        description: 'Commit SHA of Syzygy-Hub/.github to fetch tooling configs from. MUST be a pinned SHA in production — the main default is for development convenience only.'
 
 # Coverage note (judgment call 2):
 # The test binary path varies by package name and number of targets.
@@ -28,12 +37,12 @@ jobs:
   build-and-test:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Fetch SwiftLint config
         run: |
           curl -fsSL \
-            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/ios/.swiftlint.yml \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/ios/.swiftlint.yml" \
             -o .swiftlint.yml
 
       - name: Install SwiftLint
@@ -80,3 +89,11 @@ jobs:
       - name: Test without coverage
         if: ${{ !inputs.coverage }}
         run: swift test
+
+      - name: Upload test artifacts
+        if: always() && inputs.upload_artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: test-artifacts
+          path: build/reports/
+          if-no-files-found: warn

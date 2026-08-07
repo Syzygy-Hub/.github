@@ -13,25 +13,47 @@ on:
         type: string
         default: '20'
         description: 'Node.js version to use'
+      eslint_config:
+        required: false
+        type: string
+        default: '.eslintrc.json'
+        description: |
+          ESLint config filename to fetch from engineering/tooling/rn/.
+          Use '.eslintrc.json' for React Native app repos (default).
+          Use '.eslintrc.ts.json' for pure TypeScript library repos (e.g. syzygy-foundation-rn).
+      upload_artifacts:
+        required: false
+        type: boolean
+        default: true
+        description: 'Whether to upload coverage/ as a build artifact. Set to false to opt out.'
+      # WARNING: Always pass a pinned commit SHA in production.
+      # The 'main' default is for local development convenience only.
+      # A bad push to the Syzygy-Hub/.github main branch will silently
+      # affect all callers that rely on the default.
+      org_config_sha:
+        required: false
+        type: string
+        default: 'main'
+        description: 'Commit SHA of Syzygy-Hub/.github to fetch tooling configs from. MUST be a pinned SHA in production — the main default is for development convenience only.'
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: ${{ inputs.node_version }}
 
       - name: Fetch ESLint and Prettier configs
         run: |
           curl -fsSL \
-            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.eslintrc.json \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/rn/${{ inputs.eslint_config }}" \
             -o .eslintrc.json
           curl -fsSL \
-            https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.prettierrc \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/rn/.prettierrc" \
             -o .prettierrc
           # Remove any local eslintrc.js that would take precedence over the fetched .json
           rm -f .eslintrc.js .eslintrc.cjs
@@ -56,3 +78,11 @@ jobs:
       - name: Test without coverage
         if: ${{ !inputs.coverage }}
         run: npm test
+
+      - name: Upload coverage
+        if: always() && inputs.upload_artifacts
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: warn

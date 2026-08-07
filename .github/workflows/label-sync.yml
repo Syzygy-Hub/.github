@@ -13,28 +13,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Sync labels to all Syzygy-Hub repos
+      - name: Delete Syzygy labels from all Syzygy-Hub repos
         env:
           GH_TOKEN: ${{ secrets.SYZYGY_LABEL_SYNC }}
         run: |
           REPOS=$(gh repo list Syzygy-Hub --limit 100 --json nameWithOwner -q '.[].nameWithOwner')
 
-          while IFS= read -r line; do
-            if [[ $line == "- name:"* ]]; then
-              NAME="${line#*- name: }"
-              NAME="${NAME//\"/}"
-            elif [[ $line == "  color:"* ]]; then
-              COLOR="${line#*color: }"
-              COLOR="${COLOR//\"/}"
-            elif [[ $line == "  description:"* ]]; then
-              DESC="${line#*description: }"
-              DESC="${DESC//\"/}"
-              for REPO in $REPOS; do
-                gh label create "$NAME" \
-                  --color "$COLOR" \
-                  --description "$DESC" \
-                  --repo "$REPO" \
-                  --force 2>/dev/null || true
-              done
-            fi
-          done < .github/labels.yml
+          for REPO in $REPOS; do
+            gh label delete "release"      --repo "$REPO" --yes 2>/dev/null || true
+            gh label delete "chore"        --repo "$REPO" --yes 2>/dev/null || true
+            gh label delete "dependencies" --repo "$REPO" --yes 2>/dev/null || true
+          done

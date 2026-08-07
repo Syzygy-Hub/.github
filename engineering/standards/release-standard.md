@@ -86,6 +86,9 @@ All of the following must be updated and in sync before the release PR is merged
 - [ ] `CHANGELOG.md` — `[Unreleased]` contents moved into new `[X.X.X]` entry, `[Unreleased]` reset to empty
 - [ ] `README.md` — version badge updated to `X.X.X`
 
+### Flutter-specific
+- [ ] `pubspec.yaml` — bump `version:` field to match the new version. This must be done manually on the release branch before opening the PR. The CI workflow patches `pubspec.yaml` at publish time as a safety net, but the repo file should always reflect the correct version from the start. `syzygy.yml` is the canonical version source — `pubspec.yaml` must be kept in sync with it.
+
 ---
 
 ## Multi-Platform Releases

@@ -9,3 +9,7 @@
 - name: dependencies
   color: "179d99"
   description: Dependency updates
+
+- name: documentation
+  color: "0075ca"
+  description: "Improvements or additions to documentation"

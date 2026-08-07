@@ -253,16 +253,16 @@ jobs:
   ci:
     uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@main
     with:
-      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7
+      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188
 ```
 
 ```yaml
 # ✅ CORRECT — both the workflow file and tooling configs are pinned
 jobs:
   ci:
-    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7 # main
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@948d4cf819a30989d277c8abea615e585f37e188 # main
     with:
-      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7
+      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188
 ```
 
 The SHA in `uses:` and `org_config_sha` will usually be the same value — they both refer to the commit in this repo you want to consume. Keep them in sync when you update to a newer version of the tooling.
@@ -372,9 +372,9 @@ on:
 jobs:
   ci:
     # Pin the uses: ref to a commit SHA — not @main
-    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7 # main
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@948d4cf819a30989d277c8abea615e585f37e188 # main
     with:
-      org_config_sha: becfecefa5a3dbe0f4ca1d860a2b9483d3c236f7   # same SHA — pins tooling configs
+      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188   # same SHA — pins tooling configs
       eslint_config: '.eslintrc.ts.json'   # pure TS library
       node_version: '20'
       coverage: true

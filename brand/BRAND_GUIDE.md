@@ -1,3 +1,8 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="100%">
+</picture>
+
 # Syzygy Brand Guide
 
 Usage guidelines for the Syzygy logo, icon, banners, color palette, and typography. See [README.md](README.md) for the asset file list.

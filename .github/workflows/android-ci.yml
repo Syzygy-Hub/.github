@@ -61,6 +61,9 @@ jobs:
       - name: Build
         run: ./gradlew build
 
+      - name: ktlint check
+        run: ./gradlew ktlintCheck
+
       - name: Test
         run: ./gradlew test
 
@@ -71,9 +74,6 @@ jobs:
           name: test-results
           path: build/reports/tests/test
           if-no-files-found: warn
-
-      - name: ktlint check
-        run: ./gradlew ktlintCheck
 
       - name: Coverage report
         if: ${{ inputs.coverage }}

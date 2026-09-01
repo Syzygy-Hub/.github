@@ -29,9 +29,9 @@ The name comes from the astronomical term for when celestial bodies align — re
                  │ Shared contracts    │
                  └──────────┬──────────┘
                             │
-        ┌──────────┬────────┼────────┬──────────┐
-        │          │        │        │          │
-        ▼          ▼        ▼        ▼          ▼
+        ┌──────────┬────────┼────────┐
+        │          │        │        │
+        ▼          ▼        ▼        ▼
     ┌──────┐   ┌──────┐  ┌──────┐  ┌──────┐   
     │  UI  │   │ CORE │  │ SVCS │  │ AI ✦ │   
     │      │   │      │  │      │  │      │   

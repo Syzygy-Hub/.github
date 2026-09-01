@@ -11,13 +11,14 @@ Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and
 
 ## Architecture
 
+```
                     syzygy-foundation-*
                             |
-       +------------+-------+--------+------------+
-       v            v       v        v            v
-   syzygy-ui-*  syzygy-core-*  syzygy-services-*  syzygy-ai-* (AI centrepiece)
-       |            |       |        |            |
-       +------------+-------+--------+------------+
+       +------------+----------------+------------+
+       v            v                v            v
+   syzygy-ui-*  syzygy-core-*  syzygy-services-*  syzygy-ai-*
+       |            |                |            |
+       +------------+----------------+------------+
                             |
                             v
                      syzygy-base-*
@@ -25,6 +26,7 @@ Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and
                             |
                             v
                   Syzygy Example App
+```
 
 ## Layers
 

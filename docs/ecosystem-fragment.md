@@ -1,6 +1,6 @@
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="100%">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="100%">
 </picture>
 
 # Syzygy Ecosystem
@@ -12,20 +12,20 @@ Syzygy is an AI-enabled cross-platform engineering framework. Every layer above 
 ## Architecture
 
 ```
-                    syzygy-foundation-*
-                            |
-       +------------+----------------+------------+
-       v            v                v            v
-   syzygy-ui-*  syzygy-core-*  syzygy-services-*  syzygy-ai-*
-       |            |                |            |
-       +------------+----------------+------------+
-                            |
-                            v
-                     syzygy-base-*
-                     (composer/scaffold)
-                            |
-                            v
-                  Syzygy Example App
+                                     syzygy-foundation-*
+                                              |
+      +-------------------+-------------------+-------------------+-------------------+
+      |                   |                                       |                   |
+      v                   v                                       v                   v
+ syzygy-ui-*        syzygy-core-*                         syzygy-services-*      syzygy-ai-*
+      |                   |                                       |                   |
+      +-------------------+-------------------+-------------------+-------------------+
+                                              |
+                                              v
+                              syzygy-base-* (composer/scaffold)
+                                              |
+                                              v
+                                    Syzygy Example App
 ```
 
 ## Design principle

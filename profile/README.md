@@ -6,8 +6,8 @@
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](https://github.com/Syzygy-Hub/.github/blob/main/LICENSE)
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
 # Engineering Ecosystem for Intelligent Applications
@@ -19,40 +19,20 @@ The name comes from the astronomical term for when celestial bodies align — re
 ## Architecture
 
 ```
-                         SYZYGY
-                            │
-                 ┌──────────▼──────────┐
-                 │ SYZYGY FOUNDATION-* │
-                 │                     │
-                 │ Base protocols      │
-                 │ SharedTypes         │
-                 │ Shared contracts    │
-                 └──────────┬──────────┘
-                            │
-        ┌──────────┬────────┼────────┐
-        │          │        │        │
-        ▼          ▼        ▼        ▼
-    ┌──────┐   ┌──────┐  ┌──────┐  ┌──────┐   
-    │  UI  │   │ CORE │  │ SVCS │  │ AI ✦ │   
-    │      │   │      │  │      │  │      │   
-    │Design│   │ Biz  │  │ Net/ │  │ LLM/ │   
-    │system│   │logic │  │ auth │  │ RAG/ │   
-    │      │   │      │  │ /stor│  │agents│   
-    └───┬──┘   └───┬──┘  └───┬──┘  └──┬───┘   
-        │          │         │        │
-        └──────────┴────┬────┴────────┘
-                       │
-                       ▼
-             ┌──────────────────┐
-             │  SYZYGY BASE-*   │
-             │  (composer)      │
-             └────────┬─────────┘
-                      │
-                      ▼
-            ┌──────────────────┐
-            │ Syzygy Example   │
-            │ App              │
-            └──────────────────┘
+                                     syzygy-foundation-*
+                                              |
+      +-------------------+-------------------+-------------------+-------------------+
+      |                   |                                       |                   |
+      v                   v                                       v                   v
+ syzygy-ui-*        syzygy-core-*                         syzygy-services-*      syzygy-ai-*
+      |                   |                                       |                   |
+      +-------------------+-------------------+-------------------+-------------------+
+                                              |
+                                              v
+                              syzygy-base-* (composer/scaffold)
+                                              |
+                                              v
+                                    Syzygy Example App
 ```
 
 `✦` marks the new AI layer — the centrepiece of the framework's evolution.
@@ -126,8 +106,8 @@ Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.
 ## Brand
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon-512.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-icon-512.png" alt="Syzygy Icon" height="64">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/icons/syzygy-icon-512.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/icons/syzygy-icon-512.png" alt="Syzygy Icon" height="64">
 </picture>
 
 Brand assets — logo, icon, banners, and color palette — are hosted in this repository under [`brand/`](https://github.com/Syzygy-Hub/.github/tree/main/brand). See [BRAND_GUIDE.md](https://github.com/Syzygy-Hub/.github/blob/main/brand/BRAND_GUIDE.md) for usage guidelines, clear space rules, minimum sizes, and correct/incorrect usage examples.

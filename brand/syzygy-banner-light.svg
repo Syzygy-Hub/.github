@@ -3,6 +3,6 @@
   <circle cx="127.50" cy="150.00" r="57.00" fill="none" stroke="#7C6CF0" stroke-opacity="0.85" stroke-width="13.50"></circle>
   <circle cx="165.00" cy="150.00" r="57.00" fill="none" stroke="#2FB99B" stroke-opacity="0.85" stroke-width="13.50"></circle>
   <circle cx="202.50" cy="150.00" r="57.00" fill="none" stroke="#FF7A5C" stroke-opacity="0.85" stroke-width="13.50"></circle>
-  <text x="320" y="142" font-family="Sora" font-weight="800" font-size="72" fill="#111318" letter-spacing="-1">Syzygy</text>
-  <text x="320" y="192" font-family="Sora" font-weight="500" font-size="30" fill="#5b5f68">Cross-Platform Mobile Ecosystem</text>
+  <text x="320" y="138" font-family="Sora" font-weight="800" font-size="72" fill="#111318" letter-spacing="-1">Syzygy</text>
+  <text x="320" y="188" font-family="Sora" font-weight="500" font-size="26" fill="#5b5f68">Engineering Ecosystem for Intelligent Applications</text>
 </svg>

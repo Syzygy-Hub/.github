@@ -3,42 +3,45 @@
   "parser": "@typescript-eslint/parser",
   "parserOptions": {
     "ecmaVersion": 2020,
-    "ecmaFeatures": {
-      "jsx": true
-    }
+    "sourceType": "module",
+    "ecmaFeatures": { "jsx": true }
   },
-  "plugins": [
-    "@typescript-eslint",
-    "react",
-    "react-hooks",
-    "react-native",
-    "import"
-  ],
+  "plugins": ["@typescript-eslint", "react", "react-hooks", "react-native", "import"],
   "extends": [
     "eslint:recommended",
     "plugin:@typescript-eslint/recommended",
     "plugin:react/recommended",
     "plugin:react-hooks/recommended",
-    "prettier"
+    // Must always be last: disables ESLint formatting rules that would
+    // otherwise conflict with Prettier's output.
+    "eslint-config-prettier"
   ],
   "env": {
     "es6": true,
     "node": true,
     "react-native/react-native": true
   },
+  "settings": {
+    "react": { "version": "detect" }
+  },
   "rules": {
-    "@typescript-eslint/no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "@typescript-eslint/no-unused-vars": [
+      "warn",
+      { "argsIgnorePattern": "^_", "varsIgnorePattern": "^_" }
+    ],
     "@typescript-eslint/no-explicit-any": "warn",
     "react/prop-types": "off",
+    "react/react-in-jsx-scope": "off",
+    "react-native/no-inline-styles": "warn",
+    "react-native/no-unused-styles": "warn",
     "import/order": [
       "warn",
       {
-        "alphabetize": { "order": "asc" },
+        "groups": ["builtin", "external", "internal", "parent", "sibling", "index"],
+        "alphabetize": { "order": "asc", "caseInsensitive": true },
         "newlines-between": "always"
       }
-    ],
-    "react-native/no-inline-styles": "warn",
-    "react-native/no-unused-styles": "warn"
+    ]
   },
   "ignorePatterns": ["dist", "node_modules", "lib", "build"]
 }

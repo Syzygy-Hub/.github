@@ -5,187 +5,118 @@
 
 # Syzygy Ecosystem Architecture
 
-This is the single authoritative description of the Syzygy ecosystem architecture. Individual repo READMEs describe only their own internal structure and link here for the full picture.
+## Overview
 
----
+Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and enterprise. It is organised as a layered ecosystem where every layer above Foundation is independently usable. No peer layer depends on another peer — composition happens only at the Base layer through dependency injection.
 
-## The Ecosystem
+## Architecture
 
-```
-                         SYZYGY ECOSYSTEM
+                    syzygy-foundation-*
+                            |
+       +------------+-------+--------+------------+
+       v            v       v        v            v
+   syzygy-ui-*  syzygy-core-*  syzygy-services-*  syzygy-ai-* (AI centrepiece)
+       |            |       |        |            |
+       +------------+-------+--------+------------+
+                            |
+                            v
+                     syzygy-base-*
+                     (composer/scaffold)
+                            |
+                            v
+                  Syzygy Example App
 
-     ┌─────────────────────────────────────────────────┐
-     │                   Your App                      │
-     └────────────────────┬────────────────────────────┘
-                          │ consumes
-                          ▼
-     ┌─────────────────────────────────────────────────┐
-     │              syzygy-base-{platform}             │
-     │                                                 │
-     │  Composition · Architecture · DI · Features     │
-     └───────┬────────────────┬────────────────┬───────┘
-             │                │                │
-             ▼                ▼                ▼
-     ┌───────────┐   ┌────────────┐   ┌──────────────┐
-     │ syzygy-   │   │  syzygy-   │   │   syzygy-    │
-     │  ui-*     │   │  core-*    │   │ services-*   │
-     │           │   │            │   │              │
-     │ Visual    │   │ App infra- │   │ External     │
-     │ system    │   │ structure  │   │ world        │
-     └─────┬─────┘   └─────┬──────┘   └──────┬───────┘
-           │               │                  │
-           └───────────────┼──────────────────┘
-                           │ all depend on (independently)
-                           ▼
-     ┌─────────────────────────────────────────────────┐
-     │          syzygy-foundation-{platform}           │
-     │                                                 │
-     │  Contracts · Primitives · Shared Types · Errors │
-     └─────────────────────────────────────────────────┘
-```
+## Layers
 
----
+### syzygy-foundation-*
 
-## Dependency Rules
+- **Role**: Root layer. Provides `SharedTypes`, `SyzygyVersion`, and shared contracts consumed by every peer.
+- **Shared contracts**: `NetworkClientProtocol`, `AuthProvider`, `StorageProvider`, `LoggerProtocol`.
+- **Platforms**: iOS (SPM), Android (JitPack), React Native (npm), Flutter (pub.dev).
+- **Status**: v1.0.0 shipped.
 
-These are laws. They are never broken.
+### syzygy-ui-*
 
-| Layer | Depends on | Must never depend on |
-|---|---|---|
-| Foundation | Nothing | Anything |
-| UI | Foundation (optional) | Core, Services |
-| Core | Foundation | Services |
-| Services | Foundation | Core |
-| Base App | All four | — |
+- **Role**: Cross-platform design system.
+- **Position**: Peer sibling. Depends only on Foundation.
+- **Provides**: `SyzygyTheme`, runtime theme switching, 3 built-in themes, accessibility-first components.
+- **Status**: v2.4.0 shipped.
 
-**UI must never depend on Core or Services.** Visual components have no business logic and no knowledge of external systems.
+### syzygy-core-*
 
-**Core must never depend on Services.** The app foundation layer does not call external APIs directly — it coordinates through contracts defined in Foundation.
+- **Role**: Business logic contracts and state management.
+- **Position**: Peer sibling. Depends only on Foundation.
+- **Provides**: Application-level abstractions, error handling patterns, testable business logic contracts.
+- **Status**: In progress.
 
-**Services must never depend on Core.** External integrations implement Foundation contracts and are consumed by Core and Base App, not the other way around.
+### syzygy-services-*
 
----
+- **Role**: Concrete service implementations.
+- **Position**: Peer sibling. Depends only on Foundation.
+- **Provides**: `URLSession` / `OkHttp` / `Axios` / `Dio` implementations of `NetworkClientProtocol`; OAuth implementations of `AuthProvider`; Keychain / SharedPrefs / SecureStorage implementations of `StorageProvider`.
+- **Status**: In progress.
 
-## Layer Responsibilities
+### syzygy-ai-* (AI centrepiece)
 
-### Foundation — `syzygy-foundation-{platform}`
+- **Role**: AI abstraction layer.
+- **Position**: Peer sibling. Depends only on Foundation contracts — **NOT** on Core or Services.
+- **Provides**:
+  - `LLMProvider` — provider-agnostic model interface
+  - `AgentProtocol` — ReAct loop formalisation
+  - `RAGProvider` — retrieval abstraction
+  - `MemoryManager` — short- and long-term context
+  - `StreamHandler` — streaming response handling
+- **MCP-native**: designed to work with Model Context Protocol tool servers.
+- **Provider-agnostic**: works with OpenAI, Anthropic Claude, Google Gemini, and local models via Ollama.
+- **Status**: Planned — next major milestone.
 
-**What it is:** Contracts, primitives, and shared types. Zero implementation.
+### syzygy-base-*
 
-**What belongs here:**
-- Protocols and interfaces (NetworkClientProtocol, StorageProvider, AuthProvider, etc.)
-- Generic value types (SyzygyID, Page, SyzygyTimestamp, SyzygyDuration)
-- Shared enums and error types (SyzygyEnvironment, SyzygyError, LogLevel)
-- Test support contracts (FixtureProvider, TimeProvider)
+- **Role**: Opinionated scaffold and template. The only layer that composes peers.
+- **Provides**: Ready-to-start application templates that wire Foundation + UI + Core + Services + AI via dependency injection.
+- **Important distinction**: Base is not a library in the same sense as the peer layers. It is a template/scaffold that generates applications with the full Syzygy stack pre-configured.
+- **Status**: Templates available.
 
-**What does NOT belong here:**
-- Any class with behaviour beyond property storage
-- Any reference to platform APIs (UIKit, Android SDK, React Native APIs, Flutter widgets)
-- Network implementations
-- Storage implementations
-- Authentication logic
-- Business logic of any kind
-- Pagination state (belongs in Core)
-- Specific error types (NetworkError, AuthError — belong in Services)
-- ValidationRule implementations (belong in the consuming layer)
+### Syzygy Example App
 
----
+- **Role**: Reference implementation of the complete Syzygy stack.
+- **Demonstrates**: Networking, Concurrency, Security, Testing, and Agentic AI patterns.
+- **Status**: Planned.
 
-### UI — `syzygy-ui-{platform}`
+## The Independence Principle
 
-**What it is:** Visual component library with design tokens and theming. Zero business logic.
+UI, Core, Services and AI may each depend on Foundation abstractions **only**. None of the peer layers depends on any other peer layer. Base is the only place where peer layers are composed — through dependency injection.
 
-**What belongs here:**
-- SwiftUI views, Composables, React Native components, Flutter widgets
-- Design tokens (colors, typography, spacing, radius, elevation, animation)
-- Theme system (SyzygyTheme, SyzygyThemeProvider)
-- Layout components
+- **Consequence 1**: remove AI completely and the rest of Syzygy still compiles and runs.
+- **Consequence 2**: take Foundation plus AI alone and build an AI application without adopting UI, Core or Services.
 
-**What does NOT belong here:**
-- Network calls
-- Local storage
-- Authentication logic
-- Navigation logic (belongs in Core)
-- Analytics tracking beyond UI events
-- Any import of syzygy-core-* or syzygy-services-*
+## How Base Wires the Stack
 
----
+The dependency injection pattern used at the Base layer:
 
-### Core — `syzygy-core-{platform}`
+- **Base App** receives all layers.
+- **syzygy-ai** receives `NetworkClientProtocol` from Foundation.
+- **syzygy-services** provides `URLSessionNetworkClient` which implements `NetworkClientProtocol`.
+- The concrete implementation from Services satisfies the abstract contract from Foundation.
+- AI never imports Services directly.
 
-**What it is:** App infrastructure — the utilities and architecture scaffolding every app rebuilds from scratch.
+The same pattern applies to `AuthProvider`, `StorageProvider`, and `LoggerProtocol`: Foundation defines the contract, Services (or any consumer-supplied implementation) satisfies it, and every peer resolves the concrete instance through DI wired at Base.
 
-**What belongs here:**
-- Extensions on standard library types
-- DI container / service locator
-- Navigation framework
-- State management utilities
-- Security utilities (keychain, encryption)
-- Architecture patterns (MVVM, Clean Architecture base classes)
-- Testing helpers for app-layer testing
+## Platform Distribution
 
-**What does NOT belong here:**
-- External API calls (belongs in Services)
-- Visual components (belongs in UI)
-- Fundamental contracts (belongs in Foundation)
-- Business-domain logic (belongs in the consuming app)
-
----
-
-### Services — `syzygy-services-{platform}`
-
-**What it is:** Concrete implementations of Foundation contracts for the external world.
-
-**What belongs here:**
-- Network client implementation (URLSession, OkHttp, fetch, Dio)
-- Storage implementations (UserDefaults/Keychain, SharedPrefs, AsyncStorage, SharedPreferences)
-- Analytics providers (Firebase, Segment, custom)
-- Push notification handling
-- Media and camera services
-- OS-level integrations (connectivity monitoring, biometrics, location)
-
-**What does NOT belong here:**
-- Business logic
-- UI components
-- Navigation
-- Domain-specific models (belongs in the consuming app)
-
----
-
-### Base App — `syzygy-base-{platform}`
-
-**What it is:** A production-ready starter that wires all four layers together.
-
-**What belongs here:**
-- DI setup and module registration
-- Feature scaffolding
-- App entry point and configuration
-- CI/CD pipeline
-
-**What does NOT belong here:**
-- Reusable library code (if it's reusable, it belongs in one of the four layers above)
-
----
-
-## Platform Support Matrix
-
-| Package | iOS | Android | React Native | Flutter |
-|---|:---:|:---:|:---:|:---:|
-| syzygy-foundation-* | ✅ v1.0.0 | ✅ v1.0.0 | ✅ v1.0.0 | ✅ v1.0.0 |
-| syzygy-ui-* | ✅ v2.4.0 | ✅ v2.4.0 | ✅ v2.4.0 | ✅ v2.4.0 |
-| syzygy-core-* | ⏳ | ⏳ | ⏳ | ⏳ |
-| syzygy-services-* | ⏳ | ⏳ | ⏳ | ⏳ |
-| syzygy-base-* | ✅ | ✅ | ✅ | ✅ |
-
-✅ Available · ⏳ In progress · ⬜ Not started
-
----
-
-## Package Identifiers
-
-| Repo | iOS (SPM) | Android (JitPack) | RN (npm) | Flutter (pub.dev) |
+| Layer | iOS | Android | React Native | Flutter |
 |---|---|---|---|---|
-| Foundation | `syzygy-foundation-ios` | `com.syzygyhub:foundation-android` | `syzygy-foundation-rn` | `syzygy_foundation_flutter` |
-| UI | `syzygy-ui-ios` | `com.syzygyhub:ui-android` | `syzygy-ui-rn` | `syzygy_ui_flutter` |
-| Core | `syzygy-core-ios` | `com.syzygyhub:core-android` | `syzygy-core-rn` | `syzygy_core_flutter` |
-| Services | `syzygy-services-ios` | `com.syzygyhub:services-android` | `syzygy-services-rn` | `syzygy_services_flutter` |
+| Foundation | SPM | JitPack | npm | pub.dev |
+| UI | SPM | JitPack | npm | pub.dev |
+| Core | SPM | JitPack | npm | pub.dev |
+| Services | SPM | JitPack | npm | pub.dev |
+| AI | SPM | JitPack | npm | pub.dev |
+
+## Roadmap
+
+- **Foundation v1.0.0** — shipped
+- **UI v2.4.0** — shipped
+- **Core v1.0.0** — in progress
+- **Services v1.0.0** — in progress
+- **AI v1.0.0** — planned (next major milestone)
+- **Flagship Example App** — planned

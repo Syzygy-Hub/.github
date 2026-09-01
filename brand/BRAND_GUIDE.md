@@ -1,11 +1,6 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-dark-1200.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
-</picture>
-
 # Syzygy Brand Guide
 
-Usage guidelines for the Syzygy logo, icon, banners, color palette, and typography. Assets live in [`brand/`](.) alongside this file. See [README.md](../README.md) for the full ecosystem overview.
+Usage guidelines for the Syzygy logo, icon, banners, color palette, and typography. See [README.md](README.md) for the asset file list.
 
 ## Logo & icon
 
@@ -20,7 +15,7 @@ Keep clear space around the icon/logo equal to at least the height of the icon's
 
 ### Do
 
-- Use the icon/banner exactly as provided in `brand/` — the pre-exported sizes (`-192`, `-512`, `-1024`, `-1200`, `-2400`) cover favicon through print/retina use cases.
+- Use the icon/banner exactly as provided in `Assets/` — the pre-exported sizes (`-192`, `-512`, `-1024`, `-1200`, `-2400`) cover favicon through print/retina use cases.
 - Use the dark-background variant (`syzygy-banner-dark-*`) on dark surfaces, and the light-background variant (`syzygy-banner-light-*`) on light surfaces — pick by actual background color, not by the app's overall theme.
 - Maintain the icon/banner's original aspect ratio at all times — scale width and height together.
 - Use the SVG (`syzygy-icon.svg`) wherever scalability matters (README headers, print) instead of a raster export.

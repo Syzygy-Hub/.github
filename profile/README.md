@@ -10,34 +10,11 @@
   <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
-Syzygy is a cross-platform mobile ecosystem — production-ready Foundation, UI, Core and Service libraries, plus starter templates, spanning iOS, Android, React Native, and Flutter.
+# Engineering Ecosystem for Intelligent Applications
 
-The name comes from the astronomical term for when celestial bodies align — representing multiple platforms coming together into one cohesive, aligned ecosystem.
+Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and enterprise — a layered ecosystem spanning iOS, Android, React Native and Flutter, with a first-class AI abstraction layer alongside UI, Core and Services. Every layer above Foundation is **independently usable**: adopt only what you need, in any combination, on any platform. Only the Base template composes the full stack.
 
-## Why Syzygy
-
-Every UI library ships with zero third-party dependencies and the same shared token system — colors, typography, spacing, radius — reproduced consistently across all four platforms, with full Dark Mode support built in from the start. Component naming and API shape stay deliberately consistent cross-platform (the same problem is solved the same way in SwiftUI, Jetpack Compose, React Native, and Flutter), and every repo shares the same CI pipeline and tag-gated release process.
-
-## Ecosystem
-
-Syzygy is a four-layer architecture. Each layer is independent and can be used without the others.
-
-```
-  syzygy-ui-*       syzygy-core-*    syzygy-services-*
-  Presentation     App infrastructure  External world
-        │                 │                 │
-        └─────────────────┼─────────────────┘
-                          │
-               syzygy-foundation-*
-               Contracts & primitives
-```
-
-- **Foundation** — contracts, primitives, shared types. Zero implementation. Every other layer depends on this.
-- **UI** — visual component libraries with design tokens, theming, and dark mode. Zero business logic.
-- **Core** — app infrastructure, navigation, DI, security, architecture utilities. *(in progress)*
-- **Services** — networking, storage, analytics, OS integrations. *(in progress)*
-
-Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
+The name comes from the astronomical term for when celestial bodies align — representing multiple platforms and disciplines coming together into one cohesive, aligned framework.
 
 ## Architecture
 
@@ -47,81 +24,104 @@ Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.
                  ┌──────────▼──────────┐
                  │ SYZYGY FOUNDATION-* │
                  │                     │
-                 │ Primitives          │
-                 │ Contracts           │
-                 │ Shared types        │
-                 │ Errors              │
+                 │ Base protocols      │
+                 │ SharedTypes         │
+                 │ Shared contracts    │
                  └──────────┬──────────┘
                             │
-            ┌───────────────┼────────────────┐
-            │               │                │
-            ▼               ▼                ▼
-       ┌─────────┐     ┌─────────┐     ┌──────────┐
-       │   UI    │     │  CORE   │     │ SERVICES │
-       │         │     │         │     │          │
-       │ Visual  │     │   App   │     │ External │
-       │ system  │     │ infra.  │     │ world    │
-       └────┬────┘     └────┬────┘     └─────┬────┘
-            │               │                │
-            └───────────────┼────────────────┘
-                            │
-                            ▼
-                  ┌──────────────────┐
-                  │  SYZYGY BASE APP │
-                  └──────────────────┘
+        ┌──────────┬────────┼────────┬──────────┐
+        │          │        │        │          │
+        ▼          ▼        ▼        ▼          ▼
+    ┌──────┐   ┌──────┐  ┌──────┐  ┌──────┐   
+    │  UI  │   │ CORE │  │ SVCS │  │ AI ✦ │   
+    │      │   │      │  │      │  │      │   
+    │Design│   │ Biz  │  │ Net/ │  │ LLM/ │   
+    │system│   │logic │  │ auth │  │ RAG/ │   
+    │      │   │      │  │ /stor│  │agents│   
+    └───┬──┘   └───┬──┘  └───┬──┘  └──┬───┘   
+        │          │         │        │
+        └──────────┴────┬────┴────────┘
+                       │
+                       ▼
+             ┌──────────────────┐
+             │  SYZYGY BASE-*   │
+             │  (composer)      │
+             └────────┬─────────┘
+                      │
+                      ▼
+            ┌──────────────────┐
+            │ Syzygy Example   │
+            │ App              │
+            └──────────────────┘
 ```
 
-### Status
+`✦` marks the new AI layer — the centrepiece of the framework's evolution.
 
-| Layer | iOS | Android | React Native | Flutter |
-|---|:---:|:---:|:---:|:---:|
-| UI | ✅ | ✅ | ✅ | ✅ |
-| Foundation | ✅ | ✅ | ✅ | ✅ |
-| Core | ⬜ | ⬜ | ⬜ | ⬜ |
-| Services | ⬜ | ⬜ | ⬜ | ⬜ |
-| Base App | 🚧 | 🚧 | 🚧 | 🚧 |
+## Layers
 
-✅ Available &nbsp;·&nbsp; 🚧 In progress &nbsp;·&nbsp; ⬜ Not started
+| Layer | Platforms | Status | Description |
+|---|---|---|---|
+| **Foundation** | iOS · Android · RN · Flutter | v1.0.0 ✅ | Base protocols, SharedTypes, shared contracts |
+| **UI** | iOS · Android · RN · Flutter | v2.4.0 ✅ | Cross-platform design system, `SyzygyTheme`, runtime theme switching |
+| **Core** | iOS · Android · RN · Flutter | In progress 🚧 | Business logic contracts, state management |
+| **Services** | iOS · Android · RN · Flutter | In progress 🚧 | Networking, auth, storage implementations |
+| **AI** ✦ | iOS · Android · RN · Flutter | Planned 📋 | `LLMProvider`, `AgentProtocol`, `RAGProvider`, `MemoryManager`, `StreamHandler` — MCP-native |
+| **Base** | iOS · Android · RN · Flutter | Templates ✅ | Opinionated starter, composes all layers |
+
+## Platform targets
+
+- **iOS** — Swift Package Manager (SPM)
+- **Android** — JitPack
+- **React Native** — npm
+- **Flutter** — pub.dev
+
+## Design principles
+
+- **Every layer above Foundation is independently usable** — adopt only what you need
+- **No peer layer depends on another peer** — UI, Core, Services and AI each depend only on Foundation
+- **Base is the only composer** — dependency injection happens at the application layer, not the library layer
+
+## Roadmap
+
+- **Core v1.0.0** — business-logic contracts and state management across all four platforms
+- **Services v1.0.0** — networking, auth and storage implementations against Foundation contracts
+- **AI v1.0.0** — `LLMProvider`, `AgentProtocol`, `RAGProvider`, `MemoryManager`, `StreamHandler`; MCP-native
+- **Flagship Example App** — reference implementation of the full stack (Foundation + UI + Core + Services + AI, composed via Base)
+
+## Repositories
 
 ### Foundation
-Primitives, contracts, shared types, errors — the base every other layer depends on.
-
 - [syzygy-foundation-ios](https://github.com/Syzygy-Hub/syzygy-foundation-ios) — v1.0.0
 - [syzygy-foundation-android](https://github.com/Syzygy-Hub/syzygy-foundation-android) — v1.0.0
 - [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn) — v1.0.0
 - [syzygy-foundation-flutter](https://github.com/Syzygy-Hub/syzygy-foundation-flutter) — v1.0.0
 
 ### UI
-Component libraries with design tokens, theming, and dark mode support.
-
 - [syzygy-ui-ios](https://github.com/Syzygy-Hub/syzygy-ui-ios) — Swift 6 · SwiftUI · v2.4.0
 - [syzygy-ui-android](https://github.com/Syzygy-Hub/syzygy-ui-android) — Kotlin · Jetpack Compose · v2.4.0
 - [syzygy-ui-rn](https://github.com/Syzygy-Hub/syzygy-ui-rn) — React Native · TypeScript · v2.4.0
 - [syzygy-ui-flutter](https://github.com/Syzygy-Hub/syzygy-ui-flutter) — Flutter · Dart · v2.4.0
 
-### Core
-App foundation — navigation, state management, dependency injection, and architecture utilities.
+### Core *(in progress)*
+- syzygy-core-ios · syzygy-core-android · syzygy-core-rn · syzygy-core-flutter
 
-- syzygy-core-ios *(coming)*
-- syzygy-core-android *(coming)*
-- syzygy-core-rn *(coming)*
-- syzygy-core-flutter *(coming)*
+### Services *(in progress)*
+- syzygy-services-ios · syzygy-services-android · syzygy-services-rn · syzygy-services-flutter
 
-### Services
-External world integrations — networking, storage, analytics, authentication, and OS services.
+### AI ✦ *(planned)*
 
-- syzygy-services-ios *(coming)*
-- syzygy-services-android *(coming)*
-- syzygy-services-rn *(coming)*
-- syzygy-services-flutter *(coming)*
+- **syzygy-ai-ios** — AI abstraction layer for iOS — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
+- **syzygy-ai-android** — AI abstraction layer for Android — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
+- **syzygy-ai-rn** — AI abstraction layer for React Native — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
+- **syzygy-ai-flutter** — AI abstraction layer for Flutter — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
 
-### Base App
-Production-ready starter that composes all four layers — Clean Architecture, DI wiring, feature scaffolding, and CI/CD.
-
+### Base
 - [syzygy-base-ios](https://github.com/Syzygy-Hub/syzygy-base-ios)
 - [syzygy-base-android](https://github.com/Syzygy-Hub/syzygy-base-android)
 - [syzygy-base-rn](https://github.com/Syzygy-Hub/syzygy-base-rn)
 - [syzygy-base-flutter](https://github.com/Syzygy-Hub/syzygy-base-flutter)
+
+Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
 
 ## Brand
 
@@ -136,9 +136,13 @@ Brand assets — logo, icon, banners, and color palette — are hosted in this r
 
 **Typography:** [Sora](https://fonts.google.com/specimen/Sora) for the wordmark and headings · [Inter](https://fonts.google.com/specimen/Inter) (or the platform system font — SF Pro on iOS, Roboto on Android) for body copy
 
-**Available assets:**
-- `syzygy-banner-dark/light` — SVG, PNG (1200 · 2400px), WebP
-- `syzygy-icon` — SVG, PNG (32 · 192 · 512 · 1024px), WebP
+## Org links
+
+- [All Syzygy-Hub repositories](https://github.com/orgs/Syzygy-Hub/repositories)
+- [Engineering standards](https://github.com/Syzygy-Hub/.github/tree/main/engineering/standards)
+- [Architecture overview](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
+- [Brand guide](https://github.com/Syzygy-Hub/.github/blob/main/brand/BRAND_GUIDE.md)
+- [License](https://github.com/Syzygy-Hub/.github/blob/main/LICENSE)
 
 ## About
 

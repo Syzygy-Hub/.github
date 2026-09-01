@@ -218,6 +218,22 @@ There are two ESLint configs for RN repos — choose based on what the repo cont
 
 > Always pin `<sha>` to a specific commit SHA rather than `main`. The `.eslintrc.ts.json` is fetched and saved as `.eslintrc.json` at the root so ESLint auto-discovers it without any extra configuration. Both variants share the same `.prettierrc`.
 
+### Shared Lint Configuration
+
+All Syzygy repos consume shared lint rules from the `Syzygy-Hub/.github` repository under `engineering/tooling/`. This is the canonical source for all platform lint configuration files.
+
+| Platform | Path in `.github` | Config |
+|---|---|---|
+| iOS | `engineering/tooling/ios/.swiftlint.yml` | SwiftLint rules |
+| Android | `engineering/tooling/android/.editorconfig` | ktlint config and EditorConfig |
+| React Native | `engineering/tooling/rn/.eslintrc.json` + `.prettierrc` | ESLint and Prettier |
+| React Native (TS library) | `engineering/tooling/rn/.eslintrc.ts.json` + `.prettierrc` | ESLint (TypeScript-only, no JSX) |
+| Flutter | `engineering/tooling/flutter/analysis_options.yaml` | Dart analyzer rules |
+
+Consume the shared config in CI by fetching directly from this repo. Always pin to a specific commit SHA in production CI — never fetch from `main` without pinning.
+
+> **Note:** The [syzygy-lint-config](https://github.com/Syzygy-Hub/syzygy-lint-config) standalone repo is being deprecated in favour of this location. Existing repos consuming from `syzygy-lint-config` will migrate to `.github/engineering/tooling/` incrementally. The standalone repo will remain available until all consuming repos have been updated.
+
 ---
 
 ## Reusable Workflow Inputs Reference

@@ -2,6 +2,10 @@ name: React Native Release
 
 on:
   workflow_call:
+    outputs:
+      version:
+        description: The validated version number
+        value: ${{ jobs.release.outputs.version }}
   push:
     tags:
       - '[0-9]+.[0-9]+.[0-9]+'
@@ -12,6 +16,8 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
     steps:
       - uses: actions/checkout@v4
         with:
@@ -31,18 +37,6 @@ jobs:
       - name: Extract CHANGELOG entry
         run: |
           awk '/^## \[/{if(found) exit; found=1; next} found' CHANGELOG.md > release_notes.txt
-
-      - name: Set up Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: '18'
-          registry-url: 'https://registry.npmjs.org'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Publish to npm
-        run: npm publish --access=public --provenance
 
       - name: Create GitHub Release
         env:

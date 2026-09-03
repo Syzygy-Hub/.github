@@ -116,5 +116,15 @@ When a tag matching `[0-9]+.[0-9]+.[0-9]+` is pushed to a repo, the org-level re
 
 1. Reads `version:` from `syzygy.yml` and validates it matches the pushed tag — fails the run if they differ
 2. Extracts the first versioned section from `CHANGELOG.md` as release notes
-3. Publishes to the platform package registry (where applicable — npm for RN, pub.dev for Flutter; SPM is implicit on the tag, JitPack auto-builds from the GitHub Release)
+3. Publishes to the platform package registry (where applicable — npm for RN, pub.dev for Flutter; SPM is implicit on the tag, JitPack auto-builds from the GitHub Release) — **except React Native** (see below)
 4. Creates a GitHub Release with the extracted CHANGELOG entry as the release notes body
+
+---
+
+## React Native npm publish exception
+
+React Native packages cannot use the standard reusable release workflow for npm publish due to npm OIDC trusted publishing constraints. npm validates the OIDC token `job_workflow_ref` claim against the trusted publisher configuration. When npm publish runs inside a reusable workflow hosted in `.github`, the claim points to `Syzygy-Hub/.github/.github/workflows/rn-release.yml`. npm's trusted publisher however expects the claim to match the individual repo's workflow file such as `Syzygy-Hub/syzygy-foundation-rn/.github/workflows/release.yml`.
+
+To work around this each React Native repo uses a two-job release.yml: the first job delegates to the org-level `rn-release.yml` for version validation, CHANGELOG extraction and GitHub Release creation; the second job `publish-npm` runs directly in the repo's own `release.yml` and handles npm install and npm publish with provenance. This ensures the OIDC token `job_workflow_ref` matches the trusted publisher configuration on npmjs.com.
+
+This exception applies to all RN repos: syzygy-foundation-rn, syzygy-ui-rn, syzygy-core-rn, syzygy-services-rn, syzygy-ai-rn.

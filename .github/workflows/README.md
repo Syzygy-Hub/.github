@@ -130,20 +130,19 @@ Validates the pushed tag against `syzygy.yml`, extracts the CHANGELOG entry, and
 
 ## rn-release.yml
 
-Validates the pushed tag against `syzygy.yml`, publishes the npm package, and creates a GitHub Release.
+Validates the pushed tag against `syzygy.yml`, extracts the CHANGELOG entry, and creates a GitHub Release.
 
 | Trigger | Runner | Key inputs |
 |---|---|---|
-| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `ubuntu-latest` | `NPM_TOKEN` (secret) |
+| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `ubuntu-latest` | _(none)_ |
 
 **Steps:**
 1. Checkout (`actions/checkout`, `fetch-depth: 0`)
-2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag)
+2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag; outputs `version` for downstream jobs)
 3. Extract CHANGELOG entry (`awk` — extracts the first versioned section from `CHANGELOG.md` into `release_notes.txt`)
-4. Set up Node (`actions/setup-node@v4`, Node 18, registry `https://registry.npmjs.org`)
-5. Install dependencies (`npm ci`)
-6. Publish to npm (`npm publish --access=public --provenance`, authenticated via `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`)
-7. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+4. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+
+**Note:** npm publish is NOT performed in this reusable workflow. Due to npm OIDC trusted publishing requirements, the OIDC token `job_workflow_ref` must match the calling repository's workflow file exactly. Publishing from a reusable workflow in `.github` causes the OIDC token to reference `.github/rn-release.yml` instead of the individual repo's `release.yml`, which fails npm's trusted publisher verification. Each RN repo therefore contains its own `publish-npm` job in its `release.yml` that runs after this reusable workflow completes. This reusable workflow handles version validation, CHANGELOG extraction, and GitHub Release creation only.
 
 ---
 

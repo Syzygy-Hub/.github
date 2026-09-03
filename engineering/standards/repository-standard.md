@@ -232,8 +232,6 @@ All Syzygy repos consume shared lint rules from the `Syzygy-Hub/.github` reposit
 
 Consume the shared config in CI by fetching directly from this repo. Always pin to a specific commit SHA in production CI — never fetch from `main` without pinning.
 
-> **Note:** The [syzygy-lint-config](https://github.com/Syzygy-Hub/syzygy-lint-config) standalone repo is being deprecated in favour of this location. Existing repos consuming from `syzygy-lint-config` will migrate to `.github/engineering/tooling/` incrementally. The standalone repo will remain available until all consuming repos have been updated.
-
 ---
 
 ## Reusable Workflow Inputs Reference

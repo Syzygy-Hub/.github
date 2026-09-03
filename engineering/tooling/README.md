@@ -139,9 +139,3 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 To update a lint rule, edit the relevant file in this folder and commit to `main`. Then update the SHA pin used in any workflow or repo CI that fetches it. All consuming repos pick up the change on their next CI run once their SHA pin is updated.
 
 When a rule changes severity (e.g. from warning to error), note it in a commit message and check that it won't silently break currently-green CI runs in consuming repos.
-
----
-
-## Migration Note
-
-These files were previously maintained in the [`syzygy-lint-config`](https://github.com/Syzygy-Hub/syzygy-lint-config) standalone repository, which is being deprecated. The canonical source is now this folder in `Syzygy-Hub/.github`. Existing repos consuming from `syzygy-lint-config` will migrate to `engineering/tooling/` incrementally; the standalone repo will remain available until all consuming repos have been updated.

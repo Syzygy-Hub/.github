@@ -1,0 +1,56 @@
+name: React Native Release
+
+on:
+  workflow_call:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read and validate version
+        id: version
+        run: |
+          VERSION=$(grep '^version:' syzygy.yml | sed 's/version: //' | tr -d ' ')
+          TAG=${{ github.ref_name }}
+          if [ "$VERSION" != "$TAG" ]; then
+            echo "::error::syzygy.yml version ($VERSION) does not match pushed tag ($TAG)"
+            exit 1
+          fi
+          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Extract CHANGELOG entry
+        run: |
+          awk '/^## \[/{if(found) exit; found=1; next} found' CHANGELOG.md > release_notes.txt
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Publish to npm
+        run: npm publish --access=public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Create GitHub Release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${{ steps.version.outputs.VERSION }}" \
+            --title "${{ steps.version.outputs.VERSION }}" \
+            --notes-file release_notes.txt \
+            --target "${{ github.sha }}"

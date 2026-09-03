@@ -18,15 +18,11 @@ on:
         type: boolean
         default: true
         description: 'Whether to upload coverage/ as a build artifact. Set to false to opt out.'
-      # WARNING: Always pass a pinned commit SHA in production.
-      # The 'main' default is for local development convenience only.
-      # A bad push to the Syzygy-Hub/.github main branch will silently
-      # affect all callers that rely on the default.
       org_config_sha:
         required: false
         type: string
         default: 'main'
-        description: 'Commit SHA of Syzygy-Hub/.github to fetch tooling configs from. MUST be a pinned SHA in production — the main default is for development convenience only.'
+        description: 'Ref of Syzygy-Hub/.github to fetch tooling configs from. Defaults to main.'
 
 jobs:
   build-and-test:

@@ -5,7 +5,7 @@
 
 # Syzygy Release Standard
 
-All Syzygy repositories follow this release process. Releases are triggered automatically by CI when a PR is merged to `main` with a commit message starting with `release:`.
+All Syzygy repositories follow this release process. Releases are triggered by pushing a version tag to the repo — CI fires on the tag push, validates the version, publishes, and creates the GitHub Release.
 
 ---
 
@@ -22,8 +22,9 @@ All Syzygy repositories follow this release process. Releases are triggered auto
 5. Ensure the README version badge reflects the new version
 6. Open a Pull Request → `main`
 7. Get review and approval — ensure the build job passes
-8. Merge to `main` with a commit message starting with **`release:`** (e.g. `release: 1.0.1`)
-9. CI detects the `release:` prefix on the push to `main` → reads version from `syzygy.yml` → creates git tag `X.X.X` → creates a GitHub Release using the `[X.X.X]` CHANGELOG entry as the release notes body
+8. Merge to `main`
+9. Push the version tag: `git tag X.X.X && git push origin X.X.X`
+10. CI detects the tag push → reads version from `syzygy.yml` → validates it matches the tag → extracts the `[X.X.X]` CHANGELOG entry → publishes to the platform registry (where applicable) → creates a GitHub Release
 
 ---
 
@@ -50,12 +51,13 @@ Semantic versioning: `major.minor.patch`. **No `v` prefix** — not in tags, not
 
 ---
 
-## The `release:` Commit Message Prefix
+## Tag Format and Push
 
-- The merge commit message **must start with `release:`** for CI to trigger the release pipeline
-- Example: `release: 1.0.1 — CI improvements`
-- Commits without the `release:` prefix merge normally — no release is created
-- CI reads the version from `syzygy.yml` at the time of the push, not from the commit message
+- No `v` prefix: `1.0.0` not `v1.0.0`
+- Push the tag after merging to `main`: `git tag X.X.X && git push origin X.X.X`
+- The tag push fires the org-level release workflow in `Syzygy-Hub/.github`
+- CI validates that `syzygy.yml`'s `version:` field matches the pushed tag — if they differ, the release fails before publishing anything
+- Use a conventional commit message on the merge commit (e.g. `release: 1.0.1 — CI improvements`) for a clear history, but the commit message does not trigger CI
 
 ---
 
@@ -67,13 +69,15 @@ Summary:
 - No `v` prefix in version headers — `[1.0.0]` not `[v1.0.0]`
 - Date format: `YYYY-MM-DD`
 - Include only sections with entries: `Added` | `Changed` | `Fixed` | `Removed`
+- The release workflow extracts the first versioned section from `CHANGELOG.md` — the `[X.X.X]` section must exist and be populated before pushing the tag
 
 ---
 
-## Tag Format
+## Version Tag Rules
 
 - No `v` prefix: `1.0.0` not `v1.0.0`
-- Created automatically by CI after merge — **never create tags manually**
+- Tags are pushed manually by the developer after the release PR is merged — `git tag X.X.X && git push origin X.X.X`
+- The tag pattern `[0-9]+.[0-9]+.[0-9]+` is what fires the org-level release workflow
 
 ---
 
@@ -106,13 +110,11 @@ Each platform releases independently. Synchronize releases only when there is an
 
 ---
 
-## What CI Does on Release Merge
+## What CI Does on Tag Push
 
-When a PR is merged to `main` with a commit message starting with `release:`, CI:
+When a tag matching `[0-9]+.[0-9]+.[0-9]+` is pushed to a repo, the org-level release workflow (`Syzygy-Hub/.github/.github/workflows/{platform}-release.yml`) fires and:
 
-1. Detects the `release:` prefix on the push-to-main event
-2. Reads the version from `syzygy.yml`
-3. Creates git tag `X.X.X`
-4. Creates a GitHub Release with the `[X.X.X]` CHANGELOG entry as the release notes body
-
-> **Note:** Package registry publishing (JitPack / pub.dev / npm) is handled per-platform in each repo's CI workflow where applicable.
+1. Reads `version:` from `syzygy.yml` and validates it matches the pushed tag — fails the run if they differ
+2. Extracts the first versioned section from `CHANGELOG.md` as release notes
+3. Publishes to the platform package registry (where applicable — npm for RN, pub.dev for Flutter; SPM is implicit on the tag, JitPack auto-builds from the GitHub Release)
+4. Creates a GitHub Release with the extracted CHANGELOG entry as the release notes body

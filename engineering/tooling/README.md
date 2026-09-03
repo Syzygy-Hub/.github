@@ -5,7 +5,7 @@
 
 # Shared Lint Configuration
 
-This folder contains the canonical shared lint configuration files for all Syzygy platform repos. All repos consume these configs via SHA-pinned curl fetch in their CI workflows. Always pin to a specific commit SHA — never fetch from `main` directly without pinning.
+This folder contains the canonical shared lint configuration files for all Syzygy platform repos. All repos consume these configs via curl fetch in their CI workflows, always from the latest `main`.
 
 ---
 
@@ -136,6 +136,6 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 
 ## Updating Lint Rules
 
-To update a lint rule, edit the relevant file in this folder and commit to `main`. Then update the SHA pin used in any workflow or repo CI that fetches it. All consuming repos pick up the change on their next CI run once their SHA pin is updated.
+To update a lint rule, edit the relevant file in this folder and commit to `main`. All consuming repos pick up the change automatically on their next CI run, since configs are always fetched from `main`.
 
 When a rule changes severity (e.g. from warning to error), note it in a commit message and check that it won't silently break currently-green CI runs in consuming repos.

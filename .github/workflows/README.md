@@ -5,7 +5,7 @@
 
 # Reusable CI Workflows
 
-These are reusable GitHub Actions workflows called by individual Syzygy repos via `workflow_call`. Each workflow is parameterised via inputs so the same workflow serves all repos of that platform type. All action references are SHA-pinned for supply chain security.
+These are reusable GitHub Actions workflows called by individual Syzygy repos via `workflow_call`. Each workflow is parameterised via inputs so the same workflow serves all repos of that platform type. All action references use floating version tags (`@v4`, `@v2`, `@main`).
 
 ---
 
@@ -94,14 +94,87 @@ Analyzes and tests a Flutter Dart project with strict warnings enforcement.
 
 ---
 
+## ios-release.yml
+
+Validates the pushed tag against `syzygy.yml`, extracts the CHANGELOG entry, and creates a GitHub Release. SPM publishing is automatic — no explicit publish step needed (the git tag is the SPM release).
+
+| Trigger | Runner | Key inputs |
+|---|---|---|
+| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `macos-latest` | _(none beyond the tag)_ |
+
+**Steps:**
+1. Checkout (`actions/checkout`, `fetch-depth: 0`)
+2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag)
+3. Extract CHANGELOG entry (`awk` — extracts the first versioned section from `CHANGELOG.md` into `release_notes.txt`)
+4. SPM note (echo confirming the tag is the SPM release)
+5. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+
+---
+
+## android-release.yml
+
+Validates the pushed tag against `syzygy.yml`, extracts the CHANGELOG entry, and creates a GitHub Release. JitPack auto-builds from the GitHub Release tag — no explicit publish step needed.
+
+| Trigger | Runner | Key inputs |
+|---|---|---|
+| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `ubuntu-latest` | _(none beyond the tag)_ |
+
+**Steps:**
+1. Checkout (`actions/checkout`, `fetch-depth: 0`)
+2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag)
+3. Extract CHANGELOG entry (`awk` — extracts the first versioned section from `CHANGELOG.md` into `release_notes.txt`)
+4. JitPack note (echo confirming JitPack will auto-build from the tag)
+5. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+
+---
+
+## rn-release.yml
+
+Validates the pushed tag against `syzygy.yml`, publishes the npm package, and creates a GitHub Release.
+
+| Trigger | Runner | Key inputs |
+|---|---|---|
+| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `ubuntu-latest` | `NPM_TOKEN` (secret) |
+
+**Steps:**
+1. Checkout (`actions/checkout`, `fetch-depth: 0`)
+2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag)
+3. Extract CHANGELOG entry (`awk` — extracts the first versioned section from `CHANGELOG.md` into `release_notes.txt`)
+4. Set up Node (`actions/setup-node@v4`, Node 18, registry `https://registry.npmjs.org`)
+5. Install dependencies (`npm ci`)
+6. Publish to npm (`npm publish --access=public --provenance`, authenticated via `NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`)
+7. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+
+---
+
+## flutter-release.yml
+
+Validates the pushed tag against `syzygy.yml`, publishes the Dart package to pub.dev, waits for propagation, and creates a GitHub Release.
+
+| Trigger | Runner | Key inputs |
+|---|---|---|
+| `push: tags '[0-9]+.[0-9]+.[0-9]+'`, `workflow_call` | `ubuntu-latest` | `PUB_CREDENTIALS` (secret) |
+
+**Steps:**
+1. Checkout (`actions/checkout`, `fetch-depth: 0`)
+2. Read and validate version (reads `version:` from `syzygy.yml`; fails if it does not match the pushed tag)
+3. Extract CHANGELOG entry (`awk` — extracts the first versioned section from `CHANGELOG.md` into `release_notes.txt`)
+4. Set up Flutter (`subosito/flutter-action@v2`, stable channel)
+5. Setup pub credentials (writes `${{ secrets.PUB_CREDENTIALS }}` to `$HOME/.config/dart/pub-credentials.json`)
+6. Install dependencies (`flutter pub get`)
+7. Sync pubspec.yaml version (`sed` patches `pubspec.yaml` version to match the validated tag)
+8. Publish to pub.dev (`flutter pub publish --force`)
+9. Wait for pub.dev propagation (polls `https://pub.dev/api/packages/$PACKAGE_NAME` every 10 s for up to 30 attempts; emits a warning rather than failing if the version is not confirmed after 300 s)
+10. Create GitHub Release (`gh release create` with `--notes-file release_notes.txt` and `--target` set to the commit SHA)
+
+---
+
 ## Coverage
 
 Coverage is informational only — no threshold enforcement. Results appear in the GitHub Actions job summary. Coverage upload uses `if-no-files-found: warn` so missing coverage paths produce a warning rather than a failure, and the upload step runs with `if: always()` so artifacts are captured even when tests fail.
 
 ---
 
-## SHA Pinning
+## Floating Action Refs
 
-All action references in these workflows are pinned to specific commit SHAs for supply chain security. Never replace SHA pins with floating version tags like `v3` or `v4`.
-
-Both the `uses:` ref and the `org_config_sha` input should be pinned to the same commit SHA so the workflow file and the tooling configs it fetches are always in sync. See the [repository standard](https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/repository-standard.md#pinning-the-uses-ref) for the pinning pattern.
+All action references in these workflows use floating version tags (`@v4`, `@v2`, `@main`) rather than SHA-pinned commits. This is a deliberate decision for a solo-maintained organisation where maintenance overhead outweighs supply chain risk. When a new major version of an action is released, update the floating tag across all workflows in a single pass. Do not add SHA pins — they are not used in this ecosystem.

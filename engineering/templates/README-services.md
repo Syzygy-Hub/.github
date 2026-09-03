@@ -84,14 +84,14 @@ Contributions are welcome. Please follow the [Syzygy engineering standards](http
 
 ## Releases
 
-Releases follow a label-based PR flow:
+Releases follow a tag-based flow:
 
 1. Create branch `release/X.X.X`
 2. Bump version in manifest and `syzygy.yml`
 3. Update `CHANGELOG.md`
-4. Open PR → `main` with label: `release`
-5. Get approval and merge
-6. CI tags `X.X.X`, publishes, and creates the GitHub Release automatically
+4. Open PR → `main`, get approval and merge
+5. Push the version tag: `git tag X.X.X && git push origin X.X.X`
+6. CI validates the tag, publishes, and creates the GitHub Release automatically
 
 See the [Syzygy Release Standard](https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/release-standard.md) for full details.
 

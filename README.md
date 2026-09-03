@@ -73,9 +73,18 @@ Canonical lint and analysis configs. Consuming repos store a local copy under `t
 
 Platform-specific GitHub Actions workflows called by individual repos via `workflow_call`.
 
+**CI workflows** (triggered by `workflow_call` from consuming repos):
+
 - [`ios-ci.yml`](.github/workflows/ios-ci.yml) — build, SwiftLint, test, optional coverage summary
 - [`android-ci.yml`](.github/workflows/android-ci.yml) — build, ktlint, test, optional JaCoCo coverage summary
 - [`rn-ci.yml`](.github/workflows/rn-ci.yml) — typecheck, lint, test, optional Jest coverage summary
 - [`flutter-ci.yml`](.github/workflows/flutter-ci.yml) — analyze (--fatal-warnings), test, optional lcov coverage summary
+
+**Release workflows** (triggered by tag push `[0-9]+.[0-9]+.[0-9]+` or `workflow_call`):
+
+- [`ios-release.yml`](.github/workflows/ios-release.yml) — validate version, extract CHANGELOG, create GitHub Release (SPM publishes via the tag automatically)
+- [`android-release.yml`](.github/workflows/android-release.yml) — validate version, extract CHANGELOG, create GitHub Release (JitPack auto-builds from the Release tag)
+- [`rn-release.yml`](.github/workflows/rn-release.yml) — validate version, extract CHANGELOG, publish to npm, create GitHub Release
+- [`flutter-release.yml`](.github/workflows/flutter-release.yml) — validate version, extract CHANGELOG, publish to pub.dev, create GitHub Release
 
 Coverage is informational only — no threshold enforcement. Results appear in the GitHub Actions job summary.

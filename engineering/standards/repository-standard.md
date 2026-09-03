@@ -105,7 +105,7 @@ Remove deprecated UIColorToken.separator
 
 | Prefix | When |
 |---|---|
-| `release: X.X.X — description` | Release commits only |
+| `release: X.X.X — description` | Merge commit for a release branch (convention only — releases are triggered by pushing the version tag, not by this prefix) |
 | `fix: description` | Bug fixes |
 | `chore: description` | Maintenance, dependency updates, tooling |
 | `docs: description` | Documentation only changes |
@@ -198,9 +198,9 @@ There are two ESLint configs for RN repos — choose based on what the repo cont
 ```yaml
 - name: Lint
   run: |
-    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.eslintrc.json \
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.eslintrc.json \
       -o .eslintrc.json
-    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.prettierrc \
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.prettierrc \
       -o .prettierrc
     npm run lint
 ```
@@ -209,14 +209,14 @@ There are two ESLint configs for RN repos — choose based on what the repo cont
 ```yaml
 - name: Lint
   run: |
-    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.eslintrc.ts.json \
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.eslintrc.ts.json \
       -o .eslintrc.json
-    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/<sha>/engineering/tooling/rn/.prettierrc \
+    curl -fsSL https://raw.githubusercontent.com/Syzygy-Hub/.github/main/engineering/tooling/rn/.prettierrc \
       -o .prettierrc
     npm run lint
 ```
 
-> Always pin `<sha>` to a specific commit SHA rather than `main`. The `.eslintrc.ts.json` is fetched and saved as `.eslintrc.json` at the root so ESLint auto-discovers it without any extra configuration. Both variants share the same `.prettierrc`.
+> The `.eslintrc.ts.json` is fetched and saved as `.eslintrc.json` at the root so ESLint auto-discovers it without any extra configuration. Both variants share the same `.prettierrc`.
 
 ### Shared Lint Configuration
 
@@ -230,7 +230,7 @@ All Syzygy repos consume shared lint rules from the `Syzygy-Hub/.github` reposit
 | React Native (TS library) | `engineering/tooling/rn/.eslintrc.ts.json` + `.prettierrc` | ESLint (TypeScript-only, no JSX) |
 | Flutter | `engineering/tooling/flutter/analysis_options.yaml` | Dart analyzer rules |
 
-Consume the shared config in CI by fetching directly from this repo. Always pin to a specific commit SHA in production CI — never fetch from `main` without pinning.
+Consume the shared config in CI by fetching directly from this repo. Configs are always fetched from the latest `main`.
 
 ---
 
@@ -240,7 +240,7 @@ All four platform CI workflows (`ios-ci.yml`, `android-ci.yml`, `rn-ci.yml`, `fl
 
 ### Shared inputs (all platforms)
 
-#### `org_config_sha` — **must be pinned in production**
+#### `org_config_sha`
 
 ```yaml
 org_config_sha:
@@ -249,44 +249,11 @@ org_config_sha:
   default: 'main'
 ```
 
-The commit SHA of `Syzygy-Hub/.github` used to fetch tooling configs (SwiftLint, editorconfig, ESLint, analysis options). The `main` default is a **development convenience only** — a bad push to this repo's `main` branch will silently break all callers that rely on the default.
+`org_config_sha` is the ref used to fetch tooling configs (SwiftLint, editorconfig, ESLint, analysis options) from `Syzygy-Hub/.github`. The default is `main` and this is the standard value for all repos — configs are always fetched from the latest `main`. There is no requirement to pin this to a commit SHA.
 
-> **Important:** `org_config_sha` only pins the tooling config files fetched during the run (`.swiftlint.yml`, `.editorconfig`, `.eslintrc.json`, `analysis_options.yaml`). It does **not** pin the workflow file itself. The workflow file is resolved from the `uses:` ref — which must also be pinned to a commit SHA for full supply-chain security. See [Pinning the `uses:` ref](#pinning-the-uses-ref) below.
+### Calling org-level reusable workflows
 
-Update `org_config_sha` deliberately when you want to pick up a tooling config change — do not leave it floating.
-
-### Pinning the `uses:` ref
-
-When calling a reusable workflow, GitHub resolves the workflow file from the ref in the `uses:` line. If that ref is a branch name (`@main`), any push to that branch — including malicious or accidental changes — immediately affects every caller on their next run.
-
-**Pin both the `uses:` ref and `org_config_sha` to commit SHAs:**
-
-```yaml
-# ❌ WRONG — workflow file floats on main; a bad push affects all callers immediately
-jobs:
-  ci:
-    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@main
-    with:
-      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188
-```
-
-```yaml
-# ✅ CORRECT — both the workflow file and tooling configs are pinned
-jobs:
-  ci:
-    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@948d4cf819a30989d277c8abea615e585f37e188 # main
-    with:
-      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188
-```
-
-The SHA in `uses:` and `org_config_sha` will usually be the same value — they both refer to the commit in this repo you want to consume. Keep them in sync when you update to a newer version of the tooling.
-
-**What each pin covers:**
-
-| What is pinned | How it is pinned | What it protects |
-|---|---|---|
-| Workflow file (`rn-ci.yml`, etc.) | `uses: ...@<sha>` | Steps, inputs, logic of the CI workflow itself |
-| Tooling configs (`.swiftlint.yml`, `.eslintrc.json`, etc.) | `org_config_sha` input | Lint rules fetched at runtime by the workflow |
+Syzygy workflows use floating version tags (`@v4`, `@v2`, `@main`) throughout. Do not SHA-pin action refs. When calling org-level reusable workflows use `@main` as the ref. The `org_config_sha` input always uses its default value of `main` — do not override it with a commit SHA.
 
 #### `upload_artifacts`
 
@@ -385,10 +352,8 @@ on:
 
 jobs:
   ci:
-    # Pin the uses: ref to a commit SHA — not @main
-    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@948d4cf819a30989d277c8abea615e585f37e188 # main
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@main
     with:
-      org_config_sha: 948d4cf819a30989d277c8abea615e585f37e188   # same SHA — pins tooling configs
       eslint_config: '.eslintrc.ts.json'   # pure TS library
       node_version: '20'
       coverage: true

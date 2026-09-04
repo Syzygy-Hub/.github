@@ -185,6 +185,16 @@ Each repo fetches its lint config from the canonical source in this repo:
 
 Store a local copy under `tooling/{platform}/` in each repo. CI fetches the canonical version fresh on each run.
 
+### Local Development — Pre-Push Lint Hook
+
+To catch lint violations before CI, install the pre-push hook:
+
+```bash
+sh path/to/.github/engineering/hooks/setup-hooks.sh
+```
+
+The hook auto-detects your repo platform and runs the same lint checks that CI runs, using the same canonical configs. It blocks pushes on lint failure. See [`engineering/hooks/README.md`](../../hooks/README.md) for full details, escape hatches, and troubleshooting.
+
 ### RN ESLint config variants
 
 There are two ESLint configs for RN repos — choose based on what the repo contains:

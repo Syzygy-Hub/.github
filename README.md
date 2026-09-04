@@ -69,6 +69,14 @@ Canonical lint and analysis configs. Consuming repos store a local copy under `t
 
 ---
 
+## Developer Tools — [`engineering/hooks/`](engineering/hooks/)
+
+Shared developer tools that improve the local development workflow.
+
+- **Pre-push lint hook** — [`engineering/hooks/pre-push`](engineering/hooks/pre-push) — auto-detects repo platform, fetches canonical lint config, and runs linters before push. Blocks pushing on lint failure. See [`engineering/hooks/README.md`](engineering/hooks/README.md) for installation and usage.
+
+---
+
 ## Reusable CI Workflows — [`.github/workflows/`](.github/workflows/)
 
 Platform-specific GitHub Actions workflows called by individual repos via `workflow_call`.

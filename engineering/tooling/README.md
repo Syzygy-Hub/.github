@@ -134,6 +134,18 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 
 ---
 
+## Local Linting
+
+To catch lint violations **before pushing**, developers can install the pre-push hook from the Syzygy-Hub/.github repo:
+
+```bash
+sh path/to/.github/engineering/hooks/setup-hooks.sh
+```
+
+The hook runs locally on every push, using the same lint configs and rules documented here. This catches violations at dev time rather than CI time. See [`engineering/hooks/README.md`](../hooks/README.md) for installation, usage, and escape hatches (offline mode, platform-specific skips).
+
+---
+
 ## Updating Lint Rules
 
 To update a lint rule, edit the relevant file in this folder and commit to `main`. All consuming repos pick up the change automatically on their next CI run, since configs are always fetched from `main`.

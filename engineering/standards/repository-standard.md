@@ -349,6 +349,57 @@ eslint_config:
 
 ESLint config filename to fetch from `engineering/tooling/rn/`. See [RN ESLint config variants](#rn-eslint-config-variants) above for when to use each value.
 
+---
+
+## AI Composition Guidance
+
+This section covers how AI contracts (defined in [`ai-contract-spec.md`](ai-contract-spec.md)) should be consumed per platform, how API credentials must be handled, and how to wire implementations with the standard DI pattern.
+
+### Declaring the AI contract dependency
+
+Each platform's AI layer package (`syzygy-ai-{platform}`) is a separate library. Depend on it using the platform's standard package manager:
+
+| Platform | Package manager | Dependency declaration |
+|---|---|---|
+| iOS | Swift Package Manager (SPM) | Add `syzygy-ai-ios` as a `.package` in `Package.swift`; import the `SyzygyAI` product |
+| Android | Gradle (JitPack) | `implementation("com.github.Syzygy-Hub:syzygy-ai-android:{version}")` in `build.gradle.kts` |
+| React Native | npm | `"syzygy-ai-rn": "^{version}"` in `package.json` |
+| Flutter | pub | `syzygy_ai_flutter: ^{version}` in `pubspec.yaml` |
+
+Depend only on the AI contracts package — never on a concrete provider SDK directly from `Base`, `Core`, or `Foundation`. Provider SDKs (Anthropic, OpenAI, etc.) are implementation details that live in `Services` or the application layer.
+
+### API keys must never appear in contracts or Base
+
+AI contract protocols (`LLMProvider`, `EmbeddingProvider`, etc.) must not accept or store raw API keys. The correct pattern:
+
+- The protocol accepts a **credential provider** or **token provider** interface defined in `Foundation` or `Services`.
+- The credential provider is responsible for fetching, refreshing, and supplying tokens at call time.
+- Concrete values (API keys, bearer tokens) are injected by `Services` or the application layer — never hardcoded, never stored in a contract protocol, and never committed to source control.
+
+```
+// WRONG — never do this
+protocol LLMProvider {
+  var apiKey: String { get }  // ← exposes credential in contract
+}
+
+// CORRECT
+protocol LLMProvider {
+  var credentialProvider: CredentialProvider { get }  // ← provider supplies the token
+}
+```
+
+### DI binding pattern
+
+The standard layering is:
+
+1. **`syzygy-ai-{platform}`** (AI contracts) — declares the protocol slots (`LLMProvider`, `AgentProtocol`, etc.). No implementations here.
+2. **`syzygy-services-{platform}`** — provides concrete implementations (e.g. `AnthropicLLMProvider`) and wires them to the protocol slots via the DI container.
+3. **App layer** — calls into `Services` to resolve the AI protocols; never constructs provider instances directly.
+
+`Base` may reference AI contract protocols for shared UI/logic that needs to call AI, but `Base` must never instantiate or depend on a concrete provider. The implementation is always injected from `Services` or above.
+
+---
+
 ### Example caller — full production usage
 
 ```yaml

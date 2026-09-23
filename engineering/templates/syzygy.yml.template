@@ -1,6 +1,8 @@
 # Syzygy Repository Manifest
 # Copy this file to your repo root, rename it syzygy.yml, and fill in the values.
 # Schema: https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/repository-standard.md
+#
+# Flutter repos: do NOT set publish_to in pubspec.yaml — see flutter-pubspec-notes.md
 
 name: syzygy-{type}-{platform}
 type: {ui|foundation|core|services|base}

@@ -144,6 +144,41 @@ sh path/to/.github/engineering/hooks/setup-hooks.sh
 
 The hook is a symlink to a fixed path. If you move the `.github` repo, re-run `setup-hooks.sh` to update the symlink.
 
+## Standard Pre-Push Hook — Requirements for AI Repos
+
+All Syzygy AI layer repos (`syzygy-ai-{platform}`) must install the standard pre-push hook. The hook must satisfy the following requirements:
+
+### What the hook must do
+
+1. **Detect the platform** — determine iOS / Android / React Native / Flutter from root-level files (`Package.swift`, `pubspec.yaml`, `build.gradle.kts`, `package.json`).
+2. **Fetch the canonical lint config** — download the org-level config from `Syzygy-Hub/.github` (`engineering/tooling/{platform}/…`) on every push. Do not rely on locally cached copies.
+3. **Run lint** — execute the platform linter with the fetched config:
+   - iOS: `swiftlint --config <fetched>`
+   - Android: `./gradlew ktlintCheck`
+   - React Native: `npm run lint` or `npx eslint`
+   - Flutter: `flutter analyze --fatal-warnings`
+4. **Block on failure** — exit non-zero if lint fails. The push must not complete.
+5. **Restore originals** — swap back any local config files that were temporarily replaced.
+6. **Warn, not fail, when the linter is absent** — if the platform linter is not installed locally, print a warning and allow the push (CI will enforce lint).
+
+### Installation
+
+```bash
+sh path/to/.github/engineering/hooks/setup-hooks.sh
+```
+
+### Escape hatches (all repos including AI)
+
+| Env var | Effect |
+|---|---|
+| `SYZYGY_LINT_LOCAL=1` | Use locally present config instead of fetching (offline mode) |
+| `SYZYGY_SKIP_ANDROID_LINT=1` | Skip Android ktlint only (Gradle cold-start workaround) |
+| `git push --no-verify` | Skip the hook entirely (use sparingly) |
+
+The hook at `engineering/hooks/pre-push` is the canonical implementation for all Syzygy repos, including AI layer repos.
+
+---
+
 ## Development
 
 To test the hook locally (without pushing):

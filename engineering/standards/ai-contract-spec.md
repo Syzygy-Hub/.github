@@ -196,6 +196,23 @@ clear() -> Result<Void, AIError>
 
 ---
 
+### 6. `NamespacedMemoryManager`
+
+Extends `MemoryManager` with explicit namespace parameters on every call, enabling a single manager instance to operate across multiple namespaces simultaneously.
+
+**Cross-platform method name mapping**
+
+| Operation | iOS (Swift) | Android (Kotlin) | RN (TypeScript) | Flutter (Dart) |
+|---|---|---|---|---|
+| Add with namespace | `add(_:namespace:)` | `add(entry, namespace)` | `add(entry, namespace)` | `addToNamespace(entry, namespace)` |
+| Retrieve with namespace | `retrieve(query:namespace:limit:)` | `retrieve(query, namespace, limit)` | `retrieve(query, namespace, limit)` | `retrieveFromNamespace(query, namespace, limit)` |
+| Delete by ID + namespace | `delete(id:namespace:)` | `delete(id, namespace)` | `delete(id, namespace)` | `deleteEntry(id, namespace)` |
+| Clear namespace | `clear(namespace:)` | `clear(namespace)` | `clear(namespace)` | `clearNamespace(namespace)` |
+
+> **Why Flutter uses distinct method names:** Dart does not support method overloading — two methods with the same name but different parameter lists are a compile error. The namespaced variants therefore require distinct identifiers (`addToNamespace`, `retrieveFromNamespace`, `deleteEntry`, `clearNamespace`). All four platforms are semantically equivalent; only the identifiers differ.
+
+---
+
 ## Deprecations
 
 ### RN timestamp: `number` → `string` (bridge deprecation)

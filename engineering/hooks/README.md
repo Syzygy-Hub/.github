@@ -114,6 +114,10 @@ Android's `./gradlew ktlintCheck` can take 10–20 seconds on first run (Gradle 
 | **Flutter app/package** | `flutter analyze` | `tooling/flutter/analysis_options.yaml` | Included with Flutter SDK |
 | **Pure-Dart library** | `dart analyze` | `tooling/dart/analysis_options.yaml` | Included with Dart SDK |
 
+#### React Native: unused parameter convention
+
+Function parameters prefixed with `_` are treated as intentionally unused and will not trigger the `no-unused-vars` rule (e.g. `_reason`, `_token`, `_key`). Use this convention in mocks and interface implementations where a parameter is required by the contract but not used in the body.
+
 ### Linter not installed?
 
 If a linter isn't installed, the hook **warns but allows the push**:

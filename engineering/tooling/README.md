@@ -90,6 +90,7 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 - Extends: `eslint:recommended`, `plugin:@typescript-eslint/recommended`
 - `@typescript-eslint/no-explicit-any`: **error** (stricter than the app config)
 - `@typescript-eslint/explicit-function-return-type`: warn (off in test files via override)
+- `@typescript-eslint/no-unused-vars`: error with `argsIgnorePattern: "^_"` — function parameters prefixed with `_` are treated as intentionally unused and will not trigger the rule (e.g. `_reason`, `_token`, `_key`). Use this convention in mocks and interface implementations where a parameter is required by the contract but not used.
 - `no-console`: warn
 - Env: `node`, `es2020`
 - Test override: `explicit-function-return-type` disabled for `**/*.test.ts` and `**/__tests__/**/*.ts`

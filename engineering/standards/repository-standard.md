@@ -41,7 +41,7 @@ language: swift                # swift | kotlin | typescript | dart
 package_manager: spm           # spm | jitpack | npm | pub.dev
 license: MIT
 version: 2.4.0
-syzygy_foundation: ">=1.0.0"  # omit for foundation repos
+syzygy_foundation: ">=2.0.0"  # omit for foundation repos
 ```
 
 See the template at [`engineering/templates/syzygy.yml.template`](../templates/syzygy.yml.template).
@@ -181,7 +181,10 @@ Each repo fetches its lint config from the canonical source in this repo:
 | Android | `engineering/tooling/android/.editorconfig` |
 | RN (app) | `engineering/tooling/rn/.eslintrc.json` + `.prettierrc` |
 | RN (TS library) | `engineering/tooling/rn/.eslintrc.ts.json` + `.prettierrc` |
-| Flutter | `engineering/tooling/flutter/analysis_options.yaml` |
+| Flutter app/package | `engineering/tooling/flutter/analysis_options.yaml` (`flutter_lints`) |
+| Pure-Dart library | `engineering/tooling/dart/analysis_options.yaml` (`lints`) |
+
+Foundation, Core, Services, and AI Flutter repos are pure-Dart libraries (no Flutter SDK dependency) and must use the `dart/` config. Flutter app/package repos (Base Flutter, example apps) use the `flutter/` config. The pre-push hook auto-detects which applies. See [`engineering/hooks/README.md`](../../hooks/README.md) for details.
 
 Store a local copy under `tooling/{platform}/` in each repo. CI fetches the canonical version fresh on each run.
 
@@ -238,7 +241,8 @@ All Syzygy repos consume shared lint rules from the `Syzygy-Hub/.github` reposit
 | Android | `engineering/tooling/android/.editorconfig` | ktlint config and EditorConfig |
 | React Native | `engineering/tooling/rn/.eslintrc.json` + `.prettierrc` | ESLint and Prettier |
 | React Native (TS library) | `engineering/tooling/rn/.eslintrc.ts.json` + `.prettierrc` | ESLint (TypeScript-only, no JSX) |
-| Flutter | `engineering/tooling/flutter/analysis_options.yaml` | Dart analyzer rules |
+| Flutter app/package | `engineering/tooling/flutter/analysis_options.yaml` | Dart analyzer rules (`flutter_lints`) |
+| Pure-Dart library | `engineering/tooling/dart/analysis_options.yaml` | Dart analyzer rules (`lints`) |
 
 Consume the shared config in CI by fetching directly from this repo. Configs are always fetched from the latest `main`.
 

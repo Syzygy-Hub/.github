@@ -110,13 +110,34 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 
 ---
 
+## dart/
+
+**File:** `analysis_options.yaml`
+
+**Consumed by:** pure-Dart library repos (`syzygy-foundation-flutter`, `syzygy-core-flutter`, `syzygy-services-flutter`, `syzygy-ai-flutter`) — repos that have **no** Flutter SDK dependency and must remain publishable with `dart pub`.
+
+**Fetched via:** the pre-push hook and CI for pure-Dart repos. The hook auto-detects that `pubspec.yaml` has no `sdk: flutter` dependency and fetches this config instead of `flutter/analysis_options.yaml`.
+
+**Key rules enforced:**
+
+- **Base:** extends `package:lints/recommended.yaml` (the Dart-standard lint set, not `flutter_lints`)
+- `avoid_print`: true — prefer a real logger over `print()` in production code
+- `prefer_single_quotes`: true — matches the single-quote convention used in the shared ESLint/Prettier config
+- `always_declare_return_types`: true
+- `unnecessary_this`: true
+- **Excluded from analysis:** `**/*.g.dart`, `**/*.freezed.dart`, `build/**`
+
+**Why `lints` and not `flutter_lints`?** Pure-Dart packages have no Flutter SDK dependency. Using `flutter_lints` would require the Flutter SDK to be installed to run `dart analyze`, preventing these packages from being published and tested with `dart pub` alone.
+
+---
+
 ## flutter/
 
 **File:** `analysis_options.yaml`
 
-**Consumed by:** all `syzygy-*-flutter` repos (foundation, ui, core, services, base, and future Flutter libraries/apps).
+**Consumed by:** Flutter app and package repos (`syzygy-base-flutter`, `syzygy-ui-flutter`, and Flutter example apps) — repos that declare `sdk: flutter` as a dependency.
 
-**Fetched via:** the `org_config_sha` input in `flutter-ci.yml`. The workflow curls this file into the consuming repo's root as `analysis_options.yaml` before running `flutter analyze --fatal-warnings`.
+**Fetched via:** the `org_config_sha` input in `flutter-ci.yml`. The workflow curls this file into the consuming repo's root as `analysis_options.yaml` before running `flutter analyze --fatal-warnings`. The pre-push hook auto-detects Flutter repos (via `sdk: flutter` in `pubspec.yaml`) and fetches this config.
 
 **Key rules enforced:**
 
@@ -131,6 +152,15 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 - `sized_box_for_whitespace`: true — `SizedBox` is cheaper than `Container` for pure spacing
 - `unnecessary_this`: true
 - **Excluded from analysis:** `**/*.g.dart`, `**/*.freezed.dart`, `build/**`
+
+### Dart/Flutter config split summary
+
+| Repo type | Example repos | Config used | Analyze command |
+|---|---|---|---|
+| Pure-Dart library | `syzygy-foundation-flutter`, `syzygy-core-flutter`, `syzygy-services-flutter`, `syzygy-ai-flutter` | `tooling/dart/analysis_options.yaml` (`lints`) | `dart analyze` |
+| Flutter app/package | `syzygy-base-flutter`, example apps | `tooling/flutter/analysis_options.yaml` (`flutter_lints`) | `flutter analyze` |
+
+The pre-push hook auto-detects which config applies (see [`engineering/hooks/README.md`](../hooks/README.md)). The `dart/` config path was introduced in Foundation v2.0.0.
 
 ---
 

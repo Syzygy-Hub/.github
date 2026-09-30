@@ -34,9 +34,27 @@ The setup script symlinks the hook into `.git/hooks/pre-push`. It's idempotent �
 
 The hook detects your platform by checking for platform-specific files (in priority order):
 - **iOS:** `Package.swift` → runs SwiftLint
-- **Flutter:** `pubspec.yaml` → runs `flutter analyze`
+- **Flutter / pure-Dart:** `pubspec.yaml` → see [Flutter/Dart auto-detection](#flutterdart-auto-detection) below
 - **Android:** `build.gradle.kts` or `build.gradle` → runs `./gradlew ktlintCheck`
 - **React Native:** `package.json` → runs ESLint (via npm or npx)
+
+### Flutter/Dart auto-detection
+
+When `pubspec.yaml` is present the hook performs a second detection pass to distinguish **Flutter apps/packages** from **pure-Dart libraries**:
+
+- If `pubspec.yaml` contains `sdk: flutter` as a dependency → **Flutter app or package** → fetches `engineering/tooling/flutter/analysis_options.yaml` and runs `flutter analyze --fatal-warnings`
+- If `pubspec.yaml` has no `sdk: flutter` dependency → **pure-Dart library** → fetches `engineering/tooling/dart/analysis_options.yaml` and runs `dart analyze --fatal-warnings`
+
+Detection uses `grep` on `pubspec.yaml` and is performed before any network fetch.
+
+**Why this matters for the Syzygy ecosystem:**
+
+| Repo type | Example repos | Config used | Analyze command |
+|---|---|---|---|
+| Pure-Dart library | `syzygy-foundation-flutter`, `syzygy-core-flutter`, `syzygy-services-flutter`, `syzygy-ai-flutter` | `tooling/dart/analysis_options.yaml` (`lints`) | `dart analyze` |
+| Flutter app/package | `syzygy-base-flutter`, example apps | `tooling/flutter/analysis_options.yaml` (`flutter_lints`) | `flutter analyze` |
+
+Foundation, Core, Services, and AI Flutter repos are pure-Dart contract libraries with no Flutter SDK dependency. They use `lints` (not `flutter_lints`) so they can be analysed and published with `dart pub` without requiring the Flutter SDK. The `dart/` config path was introduced in Foundation v2.0.0.
 
 ### Config Fetching
 
@@ -44,7 +62,8 @@ Lint configs are fetched from the org-level `.github` repo **on every push** (no
 - iOS: `.swiftlint.yml`
 - Android: `.editorconfig`
 - React Native: `.eslintrc.json` (or `.eslintrc.ts.json` for pure TS repos) + `.prettierrc`
-- Flutter: `analysis_options.yaml`
+- Flutter app/package: `tooling/flutter/analysis_options.yaml`
+- Pure-Dart library: `tooling/dart/analysis_options.yaml`
 
 This ensures you always lint against the latest org standards without manual updates.
 
@@ -92,7 +111,8 @@ Android's `./gradlew ktlintCheck` can take 10–20 seconds on first run (Gradle 
 | **iOS** | SwiftLint | `.swiftlint.yml` | `brew install swiftlint` |
 | **Android** | ktlint (via Gradle) | `.editorconfig` | Included in `build.gradle.kts` |
 | **React Native** | ESLint + Prettier | `.eslintrc.json` + `.prettierrc` | `npm install` |
-| **Flutter** | Dart analyzer | `analysis_options.yaml` | Included with `flutter` SDK |
+| **Flutter app/package** | `flutter analyze` | `tooling/flutter/analysis_options.yaml` | Included with Flutter SDK |
+| **Pure-Dart library** | `dart analyze` | `tooling/dart/analysis_options.yaml` | Included with Dart SDK |
 
 ### Linter not installed?
 
@@ -156,7 +176,8 @@ All Syzygy AI layer repos (`syzygy-ai-{platform}`) must install the standard pre
    - iOS: `swiftlint --config <fetched>`
    - Android: `./gradlew ktlintCheck`
    - React Native: `npm run lint` or `npx eslint`
-   - Flutter: `flutter analyze --fatal-warnings`
+   - Flutter app/package: `flutter analyze --fatal-warnings`
+   - Pure-Dart library: `dart analyze --fatal-warnings`
 4. **Block on failure** — exit non-zero if lint fails. The push must not complete.
 5. **Restore originals** — swap back any local config files that were temporarily replaced.
 6. **Warn, not fail, when the linter is absent** — if the platform linter is not installed locally, print a warning and allow the push (CI will enforce lint).

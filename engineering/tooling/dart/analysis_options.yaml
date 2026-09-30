@@ -1,0 +1,30 @@
+# Shared analysis rules for pure-Dart packages in the Syzygy organisation
+# (syzygy-foundation-flutter and any future pure-Dart libraries with no
+# Flutter dependency).
+#
+# Uses `lints` (not `flutter_lints`) because these packages have no Flutter
+# SDK dependency and must remain publishable with `dart pub`.
+
+include: package:lints/recommended.yaml
+
+linter:
+  rules:
+    # print() output doesn't get filtered/leveled and is easy to forget in
+    # a PR; prefer a real logger for anything that should ship.
+    avoid_print: true
+
+    # Purely stylistic, but keeps string literals consistent across the
+    # whole Syzygy Dart codebase (matches the single-quote convention used
+    # in the shared ESLint/Prettier config for the RN side).
+    prefer_single_quotes: true
+
+    # Extra rules beyond lints' defaults that catch common mistakes
+    # without being noisy:
+    always_declare_return_types: true
+    unnecessary_this: true
+
+analyzer:
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - build/**

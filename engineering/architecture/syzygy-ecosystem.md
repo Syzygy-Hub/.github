@@ -32,31 +32,31 @@ Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and
 
 ### syzygy-foundation-*
 
-- **Role**: Root layer. Provides `SharedTypes`, `SyzygyVersion`, and shared contracts consumed by every peer.
-- **Shared contracts**: `NetworkClientProtocol`, `AuthProvider`, `StorageProvider`, `LoggerProtocol`.
+- **Role**: Root layer. Provides cross-platform contracts and primitives consumed by every peer.
+- **Shared contracts**: `NetworkClientProtocol` (with `dispose()`), `ConnectivityProvider` (with `dispose()`), `AuthProvider` (with biometric auth and token refresh), `StorageProvider`, `LoggerProtocol`, `AnalyticsProvider`. Typed error model: `SyzygyFoundationError`. Shared primitives: `SyzygyID`, `SyzygyTimestamp`, `Page`, `PaginationRequest`, `SyzygyVersion`, etc.
 - **Platforms**: iOS (SPM), Android (JitPack), React Native (npm), Flutter (pub.dev).
-- **Status**: v1.0.0 shipped.
+- **Status**: v2.0.0 shipped.
 
 ### syzygy-ui-*
 
 - **Role**: Cross-platform design system.
 - **Position**: Peer sibling. Depends only on Foundation.
 - **Provides**: `SyzygyTheme`, runtime theme switching, 3 built-in themes, accessibility-first components.
-- **Status**: v2.4.0 shipped.
+- **Status**: v3.0.0 in progress (upcoming).
 
 ### syzygy-core-*
 
 - **Role**: Business logic contracts and state management.
 - **Position**: Peer sibling. Depends only on Foundation.
 - **Provides**: Application-level abstractions, error handling patterns, testable business logic contracts.
-- **Status**: In progress.
+- **Status**: v2.0.0 in progress (upcoming).
 
 ### syzygy-services-*
 
 - **Role**: Concrete service implementations.
 - **Position**: Peer sibling. Depends only on Foundation.
 - **Provides**: `URLSession` / `OkHttp` / `Axios` / `Dio` implementations of `NetworkClientProtocol`; OAuth implementations of `AuthProvider`; Keychain / SharedPrefs / SecureStorage implementations of `StorageProvider`.
-- **Status**: In progress.
+- **Status**: v2.0.0 in progress (upcoming).
 
 ### syzygy-ai-* (AI centrepiece)
 
@@ -66,11 +66,12 @@ Syzygy is an AI-enabled cross-platform engineering framework for mobile, web and
   - `LLMProvider` — provider-agnostic model interface
   - `AgentProtocol` — ReAct loop formalisation
   - `RAGProvider` — retrieval abstraction
+  - `EmbeddingProvider` — dense vector embedding abstraction
   - `MemoryManager` — short- and long-term context
-  - `StreamHandler` — streaming response handling
+  - Also: typed tool calling, `AIError`, `JSONValue`, `NamespacedMemoryManager`, stream semantics
 - **MCP-native**: designed to work with Model Context Protocol tool servers.
 - **Provider-agnostic**: works with OpenAI, Anthropic Claude, Google Gemini, and local models via Ollama.
-- **Status**: Planned — next major milestone.
+- **Status**: v1.1.0 shipped · v2.0.0 in progress (upcoming).
 
 ### syzygy-base-*
 
@@ -116,9 +117,10 @@ The same pattern applies to `AuthProvider`, `StorageProvider`, and `LoggerProtoc
 
 ## Roadmap
 
-- **Foundation v1.0.0** — shipped
-- **UI v2.4.0** — shipped
-- **Core v1.0.0** — in progress
-- **Services v1.0.0** — in progress
-- **AI v1.0.0** — planned (next major milestone)
+- **Foundation v2.0.0** — shipped
+- **AI v1.1.0** — shipped
+- **UI v3.0.0** — in progress
+- **Core v2.0.0** — in progress
+- **Services v2.0.0** — in progress
+- **AI v2.0.0** — upcoming
 - **Flagship Example App** — planned

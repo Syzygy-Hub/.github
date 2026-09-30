@@ -41,8 +41,6 @@ syzygy-foundation-{platform} defines the contracts every other Syzygy layer depe
 
 ## Installation
 
-> **Coming soon** — Foundation is not yet published to a package registry. To use it now, add it as a local path dependency or reference the GitHub repo directly.
-
 ### {PACKAGE_MANAGER_NAME}
 
 ```{LANGUAGE}

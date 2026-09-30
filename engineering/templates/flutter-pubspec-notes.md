@@ -18,7 +18,7 @@ publish_to: https://pub.dev
 | Private / internal package | `publish_to: none` | Prevents accidental publishing; use for packages that should never be released publicly |
 | Private registry | `publish_to: https://your-registry.example.com` | Only when targeting an internal pub server |
 
-**Standard Syzygy Flutter pubspec template:**
+**Standard Syzygy Flutter pubspec template (pure-Dart library):**
 
 ```yaml
 name: syzygy_{type}_flutter
@@ -30,11 +30,13 @@ environment:
   sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
-  syzygy_foundation_flutter: ^1.0.0
+  syzygy_foundation_flutter: ^2.0.0
 
 dev_dependencies:
-  flutter_lints: ^3.0.0
+  lints: ^3.0.0
   test: ^1.24.0
 ```
 
 Note: `publish_to` is absent — this is correct and intentional.
+
+> **`lints` not `flutter_lints`:** Foundation, Core, Services, and AI Flutter repos are pure-Dart libraries with no Flutter SDK dependency. They use `lints` (from `package:lints`) so they can be analysed and published with `dart pub` without requiring the Flutter SDK. Use `flutter_lints` only in Flutter app/package repos that declare `sdk: flutter` (e.g. `syzygy-base-flutter`, example apps). See `tooling/dart/analysis_options.yaml` and `tooling/flutter/analysis_options.yaml` for the canonical configs.

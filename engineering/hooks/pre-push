@@ -221,21 +221,45 @@ lint_rn() {
 }
 
 lint_flutter() {
-  if ! has_cmd flutter; then
-    warn_missing "flutter"
-    return 0
+  # ── Detect pure-Dart vs Flutter app/package ────────────────────────
+  # A Flutter app or package lists `flutter` under `sdk:` in pubspec.yaml.
+  # Pure-Dart libraries (e.g. syzygy-foundation-flutter and other Syzygy
+  # Foundation/Core/Services/AI Flutter repos) have no such dependency and
+  # must be analysed with `dart analyze` using the lints-based config.
+  _is_flutter_sdk=false
+  if grep -q 'sdk:[[:space:]]*flutter' pubspec.yaml 2>/dev/null; then
+    _is_flutter_sdk=true
+  fi
+
+  if [ "$_is_flutter_sdk" = true ]; then
+    _dart_config_path="flutter"
+    _analyze_cmd="flutter"
+    _analyze_label="flutter analyze"
+    if ! has_cmd flutter; then
+      warn_missing "flutter"
+      return 0
+    fi
+    dim "pre-push: detected Flutter app/package — fetching flutter analysis config…"
+  else
+    _dart_config_path="dart"
+    _analyze_cmd="dart"
+    _analyze_label="dart analyze"
+    if ! has_cmd dart; then
+      warn_missing "dart"
+      return 0
+    fi
+    dim "pre-push: detected pure-Dart library — fetching dart analysis config…"
   fi
 
   # Escape hatch: SYZYGY_LINT_LOCAL=1 uses local config if available
   if [ "$SYZYGY_LINT_LOCAL" = "1" ]; then
     dim "pre-push: SYZYGY_LINT_LOCAL=1 — using local config (offline mode)"
-    dim "pre-push: running flutter analyze…"
-    flutter analyze --fatal-warnings || return $?
+    dim "pre-push: running ${_analyze_label} --fatal-warnings…"
+    "${_analyze_cmd}" analyze --fatal-warnings || return $?
     return 0
   fi
 
-  dim "pre-push: fetching Dart analysis config…"
-  fetch_config "${CONFIG_BASE_URL}/flutter/analysis_options.yaml" "analysis_options.yaml.pre-push-tmp"
+  fetch_config "${CONFIG_BASE_URL}/${_dart_config_path}/analysis_options.yaml" "analysis_options.yaml.pre-push-tmp"
 
   # Swap in the org config, run analysis, then restore.
   _had_analysis=false
@@ -246,9 +270,9 @@ lint_flutter() {
   cp "analysis_options.yaml.pre-push-tmp" "analysis_options.yaml"
   rm -f "analysis_options.yaml.pre-push-tmp"
 
-  dim "pre-push: running flutter analyze…"
+  dim "pre-push: running ${_analyze_label} --fatal-warnings…"
   _rc=0
-  flutter analyze --fatal-warnings || _rc=$?
+  "${_analyze_cmd}" analyze --fatal-warnings || _rc=$?
 
   # Restore
   if [ "$_had_analysis" = true ]; then

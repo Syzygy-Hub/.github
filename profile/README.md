@@ -41,12 +41,13 @@ The name comes from the astronomical term for when celestial bodies align — re
 
 | Layer | Platforms | Status | Description |
 |---|---|---|---|
-| **Foundation** | iOS · Android · RN · Flutter | v1.0.0 ✅ | Base protocols, SharedTypes, shared contracts |
-| **UI** | iOS · Android · RN · Flutter | v2.4.0 ✅ | Cross-platform design system, `SyzygyTheme`, runtime theme switching |
-| **Core** | iOS · Android · RN · Flutter | In progress 🚧 | Business logic contracts, state management |
-| **Services** | iOS · Android · RN · Flutter | In progress 🚧 | Networking, auth, storage implementations |
-| **AI** ✦ | iOS · Android · RN · Flutter | Planned 📋 | `LLMProvider`, `AgentProtocol`, `RAGProvider`, `MemoryManager`, `StreamHandler` — MCP-native |
-| **Base** | iOS · Android · RN · Flutter | Templates ✅ | Opinionated starter, composes all layers |
+| **Foundation** | iOS · Android · RN · Flutter | v2.0.0 ✅ | Cross-platform contracts, shared primitives and typed error model |
+| **UI** | iOS · Android · RN · Flutter | v3.0.0 ✅ | Cross-platform design system, `SyzygyTheme`, runtime theme switching |
+| **Core** | iOS · Android · RN · Flutter | v2.0.0 ✅ | Business logic contracts, state management |
+| **Services** | iOS · Android · RN · Flutter | v2.0.0 ✅ | Networking, auth, storage implementations |
+| **AI** ✦ | iOS · Android · RN · Flutter | v2.0.0 ✅ | LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager — MCP-native |
+| **Base** | iOS · Android · RN · Flutter | Available ✅ | Opinionated starter that composes all layers |
+| **Examples** | iOS · Android · RN · Flutter | Planned 🔲 | Reference implementation of the full stack |
 
 ## Platform targets
 
@@ -63,43 +64,45 @@ The name comes from the astronomical term for when celestial bodies align — re
 
 ## Roadmap
 
-- **Core v1.0.0** — business-logic contracts and state management across all four platforms
-- **Services v1.0.0** — networking, auth and storage implementations against Foundation contracts
-- **AI v1.0.0** — `LLMProvider`, `AgentProtocol`, `RAGProvider`, `MemoryManager`, `StreamHandler`; MCP-native
 - **Flagship Example App** — reference implementation of the full stack (Foundation + UI + Core + Services + AI, composed via Base)
 
 ## Repositories
 
 ### Foundation
-- [syzygy-foundation-ios](https://github.com/Syzygy-Hub/syzygy-foundation-ios) — v1.0.0
-- [syzygy-foundation-android](https://github.com/Syzygy-Hub/syzygy-foundation-android) — v1.0.0
-- [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn) — v1.0.0
-- [syzygy-foundation-flutter](https://github.com/Syzygy-Hub/syzygy-foundation-flutter) — v1.0.0
+- [syzygy-foundation-ios](https://github.com/Syzygy-Hub/syzygy-foundation-ios) — Base protocols and shared contracts · v2.0.0
+- [syzygy-foundation-android](https://github.com/Syzygy-Hub/syzygy-foundation-android) — Base protocols and shared contracts · v2.0.0
+- [syzygy-foundation-rn](https://github.com/Syzygy-Hub/syzygy-foundation-rn) — Base protocols and shared contracts · v2.0.0
+- [syzygy-foundation-flutter](https://github.com/Syzygy-Hub/syzygy-foundation-flutter) — Base protocols and shared contracts · v2.0.0
 
 ### UI
-- [syzygy-ui-ios](https://github.com/Syzygy-Hub/syzygy-ui-ios) — Swift 6 · SwiftUI · v2.4.0
-- [syzygy-ui-android](https://github.com/Syzygy-Hub/syzygy-ui-android) — Kotlin · Jetpack Compose · v2.4.0
-- [syzygy-ui-rn](https://github.com/Syzygy-Hub/syzygy-ui-rn) — React Native · TypeScript · v2.4.0
-- [syzygy-ui-flutter](https://github.com/Syzygy-Hub/syzygy-ui-flutter) — Flutter · Dart · v2.4.0
+- [syzygy-ui-ios](https://github.com/Syzygy-Hub/syzygy-ui-ios) — Swift 6 · SwiftUI · v3.0.0
+- [syzygy-ui-android](https://github.com/Syzygy-Hub/syzygy-ui-android) — Kotlin · Jetpack Compose · v3.0.0
+- [syzygy-ui-rn](https://github.com/Syzygy-Hub/syzygy-ui-rn) — React Native · TypeScript · v3.0.0
+- [syzygy-ui-flutter](https://github.com/Syzygy-Hub/syzygy-ui-flutter) — Flutter · Dart · v3.0.0
 
-### Core *(in progress)*
-- syzygy-core-ios · syzygy-core-android · syzygy-core-rn · syzygy-core-flutter
+### Core
+- [syzygy-core-ios](https://github.com/Syzygy-Hub/syzygy-core-ios) — Business logic contracts · v2.0.0
+- [syzygy-core-android](https://github.com/Syzygy-Hub/syzygy-core-android) — Business logic contracts · v2.0.0
+- [syzygy-core-rn](https://github.com/Syzygy-Hub/syzygy-core-rn) — Business logic contracts · v2.0.0
+- [syzygy-core-flutter](https://github.com/Syzygy-Hub/syzygy-core-flutter) — Business logic contracts · v2.0.0
 
-### Services *(in progress)*
-- syzygy-services-ios · syzygy-services-android · syzygy-services-rn · syzygy-services-flutter
+### Services
+- [syzygy-services-ios](https://github.com/Syzygy-Hub/syzygy-services-ios) — Networking, auth and storage implementations · v2.0.0
+- [syzygy-services-android](https://github.com/Syzygy-Hub/syzygy-services-android) — Networking, auth and storage implementations · v2.0.0
+- [syzygy-services-rn](https://github.com/Syzygy-Hub/syzygy-services-rn) — Networking, auth and storage implementations · v2.0.0
+- [syzygy-services-flutter](https://github.com/Syzygy-Hub/syzygy-services-flutter) — Networking, auth and storage implementations · v2.0.0
 
-### AI ✦ *(planned)*
-
-- **syzygy-ai-ios** — AI abstraction layer for iOS — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
-- **syzygy-ai-android** — AI abstraction layer for Android — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
-- **syzygy-ai-rn** — AI abstraction layer for React Native — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
-- **syzygy-ai-flutter** — AI abstraction layer for Flutter — LLMProvider, AgentProtocol, RAGProvider, MemoryManager, StreamHandler. Coming soon. 📋 Planned
+### AI ✦
+- [syzygy-ai-ios](https://github.com/Syzygy-Hub/syzygy-ai-ios) — AI abstraction layer for iOS — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v2.0.0
+- [syzygy-ai-android](https://github.com/Syzygy-Hub/syzygy-ai-android) — AI abstraction layer for Android — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v2.0.0
+- [syzygy-ai-rn](https://github.com/Syzygy-Hub/syzygy-ai-rn) — AI abstraction layer for React Native — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v2.0.0
+- [syzygy-ai-flutter](https://github.com/Syzygy-Hub/syzygy-ai-flutter) — AI abstraction layer for Flutter — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v2.0.0
 
 ### Base
-- [syzygy-base-ios](https://github.com/Syzygy-Hub/syzygy-base-ios)
-- [syzygy-base-android](https://github.com/Syzygy-Hub/syzygy-base-android)
-- [syzygy-base-rn](https://github.com/Syzygy-Hub/syzygy-base-rn)
-- [syzygy-base-flutter](https://github.com/Syzygy-Hub/syzygy-base-flutter)
+- [syzygy-base-ios](https://github.com/Syzygy-Hub/syzygy-base-ios) — Opinionated starter that composes all layers
+- [syzygy-base-android](https://github.com/Syzygy-Hub/syzygy-base-android) — Opinionated starter that composes all layers
+- [syzygy-base-rn](https://github.com/Syzygy-Hub/syzygy-base-rn) — Opinionated starter that composes all layers
+- [syzygy-base-flutter](https://github.com/Syzygy-Hub/syzygy-base-flutter) — Opinionated starter that composes all layers
 
 Full architecture details: [syzygy-ecosystem.md](https://github.com/Syzygy-Hub/.github/blob/main/engineering/architecture/syzygy-ecosystem.md)
 

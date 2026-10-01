@@ -11,7 +11,7 @@ on:
       java_version:
         required: false
         type: string
-        default: '21'
+        default: '17'
         description: "JDK version to use. Use '17' for library repos (e.g. syzygy-foundation-android), '21' for app repos. Must match the repo's jvmToolchain() setting."
       upload_artifacts:
         required: false

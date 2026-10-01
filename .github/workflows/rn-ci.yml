@@ -11,8 +11,8 @@ on:
       node_version:
         required: false
         type: string
-        default: '20'
-        description: 'Node.js version to use'
+        default: '22'
+        description: "Node.js version to use."
       eslint_config:
         required: false
         type: string

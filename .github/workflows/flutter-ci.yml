@@ -7,12 +7,12 @@ on:
         required: false
         type: boolean
         default: true
-        description: 'Whether to run flutter test --coverage and post a summary'
+        description: 'Whether to run tests with coverage and post a summary'
       flutter_version:
         required: false
         type: string
         default: 'stable'
-        description: 'Flutter version or channel (stable, beta, or a version like 3.22.0)'
+        description: 'Flutter version or channel (stable, beta, or a version like 3.22.0). Only used when the repo is detected as a Flutter app/package.'
       upload_artifacts:
         required: false
         type: boolean
@@ -30,26 +30,66 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Detect repo type (Flutter vs pure-Dart)
+        id: detect
+        run: |
+          if grep -qE '^[[:space:]]+sdk:[[:space:]]*flutter' pubspec.yaml 2>/dev/null; then
+            echo "type=flutter" >> "$GITHUB_OUTPUT"
+            echo "Detected: Flutter app/package (sdk: flutter found in pubspec.yaml)"
+          else
+            echo "type=dart" >> "$GITHUB_OUTPUT"
+            echo "Detected: pure-Dart library (no sdk: flutter in pubspec.yaml)"
+          fi
+
+      # --- Flutter setup (Flutter repos only) ---
       - name: Set up Flutter
+        if: steps.detect.outputs.type == 'flutter'
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ inputs.flutter_version }}
           channel: stable
 
-      - name: Fetch analysis config
+      # --- Dart setup (pure-Dart repos only) ---
+      - name: Set up Dart
+        if: steps.detect.outputs.type == 'dart'
+        uses: dart-lang/setup-dart@v1
+
+      # --- Fetch analysis config ---
+      - name: Fetch Flutter analysis config
+        if: steps.detect.outputs.type == 'flutter'
         run: |
           curl -fsSL \
             "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/flutter/analysis_options.yaml" \
             -o analysis_options.yaml
 
-      - name: Install dependencies
+      - name: Fetch Dart analysis config
+        if: steps.detect.outputs.type == 'dart'
+        run: |
+          curl -fsSL \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/dart/analysis_options.yaml" \
+            -o analysis_options.yaml
+
+      # --- Install dependencies ---
+      - name: Install dependencies (Flutter)
+        if: steps.detect.outputs.type == 'flutter'
         run: flutter pub get
 
-      - name: Analyze
+      - name: Install dependencies (Dart)
+        if: steps.detect.outputs.type == 'dart'
+        run: dart pub get
+
+      # --- Analyze ---
+      - name: Analyze (Flutter)
+        if: steps.detect.outputs.type == 'flutter'
         run: flutter analyze --fatal-warnings
 
-      - name: Test with coverage
-        if: ${{ inputs.coverage }}
+      - name: Analyze (Dart)
+        if: steps.detect.outputs.type == 'dart'
+        run: dart analyze --fatal-warnings
+
+      # --- Test with coverage ---
+      - name: Test with coverage (Flutter)
+        if: ${{ inputs.coverage && steps.detect.outputs.type == 'flutter' }}
         run: |
           flutter test --coverage
           echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
@@ -57,14 +97,54 @@ jobs:
             lcov --summary coverage/lcov.info 2>&1 | tee coverage-summary.txt
             cat coverage-summary.txt >> "$GITHUB_STEP_SUMMARY"
           else
-            echo "Coverage data generated at \`coverage/lcov.info\`" >> "$GITHUB_STEP_SUMMARY"
-            echo "Install lcov to display a line-coverage summary." >> "$GITHUB_STEP_SUMMARY"
+            if [ -f coverage/lcov.info ]; then
+              LINES_FOUND=$(grep -c "^DA:" coverage/lcov.info || echo 0)
+              LINES_HIT=$(grep "^DA:" coverage/lcov.info | grep -cv ",0$" || echo 0)
+              echo "Lines found: $LINES_FOUND" >> "$GITHUB_STEP_SUMMARY"
+              echo "Lines hit: $LINES_HIT" >> "$GITHUB_STEP_SUMMARY"
+              if [ "$LINES_FOUND" -gt 0 ]; then
+                PCT=$(( LINES_HIT * 100 / LINES_FOUND ))
+                echo "Coverage: ${PCT}%" >> "$GITHUB_STEP_SUMMARY"
+              fi
+            else
+              echo "Coverage data generated at \`coverage/lcov.info\`" >> "$GITHUB_STEP_SUMMARY"
+              echo "Install lcov to display a line-coverage summary." >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
 
-      - name: Test without coverage
-        if: ${{ !inputs.coverage }}
+      - name: Test with coverage (Dart)
+        if: ${{ inputs.coverage && steps.detect.outputs.type == 'dart' }}
+        run: dart test --coverage=coverage
+
+      - name: Coverage summary (Dart)
+        if: ${{ inputs.coverage && steps.detect.outputs.type == 'dart' }}
+        run: |
+          if [ -f coverage/lcov.info ]; then
+            LINES_FOUND=$(grep -c "^DA:" coverage/lcov.info || echo 0)
+            LINES_HIT=$(grep "^DA:" coverage/lcov.info | grep -cv ",0$" || echo 0)
+            {
+              echo "## Coverage Report"
+              echo "Lines found: $LINES_FOUND"
+              echo "Lines hit: $LINES_HIT"
+              if [ "$LINES_FOUND" -gt 0 ]; then
+                PCT=$(( LINES_HIT * 100 / LINES_FOUND ))
+                echo "Coverage: ${PCT}%"
+              fi
+            } >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "## Coverage Report — lcov.info not found." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      # --- Test without coverage ---
+      - name: Test without coverage (Flutter)
+        if: ${{ !inputs.coverage && steps.detect.outputs.type == 'flutter' }}
         run: flutter test
 
+      - name: Test without coverage (Dart)
+        if: ${{ !inputs.coverage && steps.detect.outputs.type == 'dart' }}
+        run: dart test
+
+      # --- Upload coverage artifact ---
       - name: Upload coverage
         if: always() && inputs.upload_artifacts
         uses: actions/upload-artifact@v4

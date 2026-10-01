@@ -25,7 +25,7 @@ Runs SwiftLint, builds, and tests an iOS Swift Package Manager library or app.
 5. Build (`swift build`)
 6. Test with coverage (`swift test --enable-code-coverage` + `xcrun llvm-cov report`) — when `coverage: true`
 7. Test without coverage (`swift test`) — when `coverage: false`
-8. Upload test artifacts (`actions/upload-artifact`, `build/reports/`) — when `upload_artifacts: true`
+8. Upload test artifacts (`actions/upload-artifact`, `.build/reports/`) — when `upload_artifacts: true`
 
 ---
 
@@ -40,14 +40,15 @@ Builds, lints with ktlint, tests, and optionally reports JaCoCo coverage for an 
 **Steps:**
 1. Checkout (`actions/checkout`)
 2. Set up JDK (`actions/setup-java`, version from `java_version` input, Temurin distribution)
-3. Fetch ktlint config (curl `.editorconfig` from `org_config_sha`)
-4. Build (`./gradlew build`)
-5. ktlint check (`./gradlew ktlintCheck`)
-6. Test (`./gradlew test`)
-7. Upload test results (`actions/upload-artifact`, `build/reports/tests/test`) — when `upload_artifacts: true`
-8. Coverage report (`./gradlew jacocoTestReport` + summary) — when `coverage: true`
+3. Set up Gradle (`gradle/actions/setup-gradle` — enables Gradle caching)
+4. Fetch ktlint config (curl `.editorconfig` from `org_config_sha`)
+5. Build (`./gradlew build`)
+6. ktlint check (`./gradlew ktlintCheck`)
+7. Test (`./gradlew test`)
+8. Upload test results (`actions/upload-artifact`, `build/reports/tests/test`) — when `upload_artifacts: true`
+9. Coverage report (`./gradlew jacocoTestReport` + summary) — when `coverage: true`
 
-> **Note:** `java_version` defaults to `'21'` for app repos. Library repos (e.g. `syzygy-foundation-android`) should pass `'17'` to match their `jvmToolchain()` setting.
+> **Note:** `java_version` defaults to `'21'` for app repos. Library repos (e.g. `syzygy-foundation-android`) must pass `'17'` explicitly via `with: java_version: '17'` to match their `jvmToolchain()` setting.
 
 ---
 
@@ -70,27 +71,39 @@ Typechecks, lints, and tests a React Native or pure TypeScript library repo.
 8. Test without coverage (`npm test`) — when `coverage: false`
 9. Upload coverage (`actions/upload-artifact`, `coverage/`) — when `upload_artifacts: true`
 
+> **Note:** `node_version` defaults to `'22'`. Repos that need Node 20 must pass `'20'` explicitly via `with: node_version: '20'`.
+
 > **`eslint_config` input:** Pass `.eslintrc.json` (default) for React Native app repos that contain JSX/TSX components, screens, or hooks. Pass `.eslintrc.ts.json` for pure TypeScript library repos with no React or JSX (e.g. `syzygy-foundation-rn`, `syzygy-core-rn`). The fetched config is always saved as `.eslintrc.json` at the repo root so ESLint auto-discovers it.
 
 ---
 
 ## flutter-ci.yml
 
-Analyzes and tests a Flutter Dart project with strict warnings enforcement.
+Analyzes and tests a Flutter app/package or a pure-Dart library with strict warnings enforcement. The toolchain is auto-detected per repo.
 
 | Trigger | Runner | Key inputs |
 |---|---|---|
 | `workflow_call` | `ubuntu-latest` | `coverage`, `flutter_version`, `upload_artifacts`, `org_config_sha` |
 
+**Repo type detection:** the workflow reads `pubspec.yaml` at the repo root.
+
+| `pubspec.yaml` contains `sdk: flutter` under `dependencies:`? | Detected type | SDK setup | Analysis config | Commands |
+|---|---|---|---|---|
+| Yes | Flutter app/package | `subosito/flutter-action@v2` | `tooling/flutter/analysis_options.yaml` | `flutter pub get`, `flutter analyze --fatal-warnings`, `flutter test --coverage` |
+| No | Pure-Dart library | `dart-lang/setup-dart@v1` | `tooling/dart/analysis_options.yaml` | `dart pub get`, `dart analyze --fatal-warnings`, `dart test --coverage=coverage` |
+
+`flutter_version` defaults to the `stable` channel and only applies to Flutter repos; it is ignored for pure-Dart repos.
+
 **Steps:**
 1. Checkout (`actions/checkout`)
-2. Set up Flutter (`subosito/flutter-action`, version from `flutter_version` input)
-3. Fetch analysis config (curl `analysis_options.yaml` from `org_config_sha`)
-4. Install dependencies (`flutter pub get`)
-5. Analyze (`flutter analyze --fatal-warnings`)
-6. Test with coverage (`flutter test --coverage` + lcov summary if available) — when `coverage: true`
-7. Test without coverage (`flutter test`) — when `coverage: false`
-8. Upload coverage (`actions/upload-artifact`, `coverage/`) — when `upload_artifacts: true`
+2. Detect repo type (`grep` for `sdk: flutter` in `pubspec.yaml`)
+3. Set up Flutter or Dart SDK (per detected type)
+4. Fetch analysis config (curl the `flutter/` or `dart/` `analysis_options.yaml` from `org_config_sha`)
+5. Install dependencies (`flutter pub get` / `dart pub get`)
+6. Analyze (`flutter analyze --fatal-warnings` / `dart analyze --fatal-warnings`)
+7. Test with coverage + lcov-based summary — when `coverage: true`
+8. Test without coverage (`flutter test` / `dart test`) — when `coverage: false`
+9. Upload coverage (`actions/upload-artifact`, `coverage/`) — when `upload_artifacts: true`
 
 ---
 

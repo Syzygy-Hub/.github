@@ -284,7 +284,7 @@ Artifact upload paths per platform:
 
 | Platform | Artifact name | Path uploaded |
 |---|---|---|
-| iOS | `test-artifacts` | `build/reports/` |
+| iOS | `test-artifacts` | `.build/reports/` |
 | Android | `test-results` | `build/reports/tests/test` |
 | RN | `coverage` | `coverage/` |
 | Flutter | `coverage` | `coverage/` |
@@ -337,7 +337,7 @@ Flutter version or channel passed to `subosito/flutter-action`. Pass a specific 
 node_version:
   required: false
   type: string
-  default: '20'
+  default: '22'
 ```
 
 Node.js version passed to `actions/setup-node`.

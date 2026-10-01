@@ -11,7 +11,7 @@ on:
       java_version:
         required: false
         type: string
-        default: '17'
+        default: '21'
         description: "JDK version to use. Use '17' for library repos (e.g. syzygy-foundation-android), '21' for app repos. Must match the repo's jvmToolchain() setting."
       upload_artifacts:
         required: false
@@ -47,6 +47,8 @@ jobs:
         with:
           java-version: ${{ inputs.java_version }}
           distribution: 'temurin'
+
+      - uses: gradle/actions/setup-gradle@v4
 
       - name: Fetch ktlint config
         run: |

@@ -558,9 +558,11 @@ jobs:
           RESULT=".build/reports/TestResults.xcresult"
           # Reporting is tolerant: tests have already passed in the Test step.
           if [ -d "$RESULT" ] && xcrun xccov view --report --only-targets "$RESULT" > .build/reports/coverage.txt 2>&1; then
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
-            cat .build/reports/coverage.txt >> "$GITHUB_STEP_SUMMARY"
-            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            {
+              echo '```'
+              cat .build/reports/coverage.txt
+              echo '```'
+            } >> "$GITHUB_STEP_SUMMARY"
           else
             echo "::warning::Coverage report unavailable (no result bundle or xccov failed)."
             echo "Coverage report unavailable." >> "$GITHUB_STEP_SUMMARY"

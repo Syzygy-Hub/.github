@@ -102,6 +102,7 @@ jobs:
             ERR_FILE=$(mktemp)
             # Classify the newest completed run. Runs of any status are fetched, so an
             # in-progress-only result can be told apart from no run at all.
+            # shellcheck disable=SC2016 # single quotes are intentional: $last is a jq variable, not a shell one.
             JQ_CLASSIFY='if (.workflow_runs | length) == 0 then "no-run"
               else
                 ([.workflow_runs[] | select(.status == "completed")] | sort_by(.created_at) | last) as $last

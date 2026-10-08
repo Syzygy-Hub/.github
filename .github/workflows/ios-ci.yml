@@ -390,7 +390,7 @@ jobs:
 
       - name: Cache SwiftPM build
         if: ${{ inputs.project_type == 'spm' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{ inputs.working_directory }}/.build
           key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved', '**/Package.swift') }}
@@ -399,7 +399,7 @@ jobs:
 
       - name: Cache Xcode DerivedData
         if: ${{ inputs.project_type == 'xcode' }}
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/Library/Developer/Xcode/DerivedData
           key: ${{ runner.os }}-xcode-${{ hashFiles('**/Package.resolved', '**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}

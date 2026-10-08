@@ -45,7 +45,7 @@ jobs:
     outputs:
       version: ${{ steps.version.outputs.VERSION }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate tag and syzygy.yml version
         id: version
@@ -88,7 +88,7 @@ jobs:
     outputs:
       version: ${{ needs.validate.outputs.version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Extract CHANGELOG entry
         env:

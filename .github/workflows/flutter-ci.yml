@@ -130,7 +130,7 @@ jobs:
 
       # --- Pub cache ---
       - name: Cache pub packages
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.pub-cache
           # Apps commit pubspec.lock; libraries do not, so fall back to pubspec.yaml.

@@ -1,0 +1,531 @@
+{
+  "schema": "syzygy-ecosystem-feed/1",
+  "generated_from": "syzygy.yml files",
+  "layers": [
+    {
+      "layer": "foundation",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-foundation-ios",
+              "type": "foundation",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "swift",
+              "package_manager": "spm",
+              "syzygy_foundation": null,
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-foundation-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-foundation-android",
+              "type": "foundation",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "kotlin",
+              "package_manager": "jitpack",
+              "syzygy_foundation": null,
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-foundation-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-foundation-rn",
+              "type": "foundation",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "typescript",
+              "package_manager": "npm",
+              "syzygy_foundation": null,
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-foundation-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-foundation-flutter",
+              "type": "foundation",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "dart",
+              "package_manager": "pub.dev",
+              "syzygy_foundation": null,
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-foundation-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "ui",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-ui-ios",
+              "type": "ui",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "swift",
+              "package_manager": "spm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ui-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-ui-android",
+              "type": "ui",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "kotlin",
+              "package_manager": "jitpack",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ui-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-ui-rn",
+              "type": "ui",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "typescript",
+              "package_manager": "npm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ui-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-ui-flutter",
+              "type": "ui",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "dart",
+              "package_manager": "pub.dev",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ui-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "core",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-core-ios",
+              "type": "core",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "swift",
+              "package_manager": "spm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-core-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-core-android",
+              "type": "core",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "kotlin",
+              "package_manager": "jitpack",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-core-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-core-rn",
+              "type": "core",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "typescript",
+              "package_manager": "npm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-core-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-core-flutter",
+              "type": "core",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "dart",
+              "package_manager": "pub.dev",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-core-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "services",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-services-ios",
+              "type": "services",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "swift",
+              "package_manager": "spm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-services-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-services-android",
+              "type": "services",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "kotlin",
+              "package_manager": "jitpack",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-services-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-services-rn",
+              "type": "services",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "typescript",
+              "package_manager": "npm",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-services-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-services-flutter",
+              "type": "services",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": "dart",
+              "package_manager": "pub.dev",
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": "MIT",
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-services-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "ai",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-ai-ios",
+              "type": "ai",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ai-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-ai-android",
+              "type": "ai",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ai-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-ai-rn",
+              "type": "ai",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ai-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-ai-flutter",
+              "type": "ai",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": ">=3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-ai-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "base",
+      "platforms": [
+        {
+          "platform": "ios",
+          "repos": [
+            {
+              "name": "syzygy-base-ios",
+              "type": "base",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": "3.0.0",
+              "dependency_constraints": {
+                "ui": "3.0.0",
+                "core": "3.0.0",
+                "services": "3.0.0",
+                "ai": "3.0.0"
+              },
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-base-ios",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "android",
+          "repos": [
+            {
+              "name": "syzygy-base-android",
+              "type": "base",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": "3.0.0",
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-base-android",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "rn",
+          "repos": [
+            {
+              "name": "syzygy-base-rn",
+              "type": "base",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": "3.0.0",
+              "dependency_constraints": {
+                "ui": "3.0.0",
+                "core": "3.0.0",
+                "services": "3.0.0",
+                "ai": "3.0.0"
+              },
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-base-rn",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        },
+        {
+          "platform": "flutter",
+          "repos": [
+            {
+              "name": "syzygy-base-flutter",
+              "type": "base",
+              "version": "3.0.0",
+              "status": "shipped",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": "3.0.0",
+              "dependency_constraints": {
+                "ui": "3.0.0",
+                "core": "3.0.0",
+                "services": "3.0.0",
+                "ai": "3.0.0"
+              },
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/syzygy-base-flutter",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "layer": "hub",
+      "platforms": [
+        {
+          "platform": "none",
+          "repos": [
+            {
+              "name": "hub",
+              "type": "hub",
+              "version": null,
+              "status": "unknown",
+              "language": null,
+              "package_manager": null,
+              "syzygy_foundation": null,
+              "dependency_constraints": {},
+              "license": null,
+              "repo_url": "https://github.com/Syzygy-Hub/.github",
+              "ci_workflow": null,
+              "release_workflow": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

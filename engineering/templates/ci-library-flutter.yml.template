@@ -1,0 +1,23 @@
+# Caller workflow: CI for a Flutter or pure-Dart library. Copy to .github/workflows/ci.yml.
+# Input names are the planned vocabulary; they are documented in .github/workflows/README.md
+# of Syzygy-Hub/.github. The pre-push hook and CI pick tooling/dart or tooling/flutter
+# from the pubspec (sdk: flutter present means Flutter).
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/flutter-ci.yml@main
+    with:
+      working_directory: '.'
+      runner: ubuntu-latest
+      flutter_version: 'stable'
+      dart_sdk_version: 'stable'
+      coverage: true
+      upload_artifacts: true
+      org_config_sha: 'main'

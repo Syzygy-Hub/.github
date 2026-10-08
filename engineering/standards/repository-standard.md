@@ -35,16 +35,81 @@ Every Syzygy repo must have a `syzygy.yml` at its root.
 ```yaml
 # Syzygy Repository Manifest
 name: syzygy-ui-ios
-type: ui                       # foundation | ui | core | services | base
+type: ui                       # foundation | ui | core | services | ai | base | app | example
 platform: ios                  # ios | android | rn | flutter
 language: swift                # swift | kotlin | typescript | dart
 package_manager: spm           # spm | jitpack | npm | pub.dev
 license: MIT
-version: 2.4.0
-syzygy_foundation: ">=2.0.0"  # omit for foundation repos
+version: 3.0.0                 # bare semver, no v prefix
+syzygy_foundation: ">=3.0.0"  # omit for foundation repos
 ```
 
 See the template at [`engineering/templates/syzygy.yml.template`](../templates/syzygy.yml.template).
+
+### Canonical schema and validator
+
+The canonical schema is [`engineering/schema/syzygy.schema.json`](../schema/syzygy.schema.json) (JSON Schema draft 2020-12). It covers all layers, including `ai`, `base`, `app` and `example`. The legacy keys `layer`, `foundation` and the `syzygy_<layer>` keys are accepted by the validator and reported as warnings. The canonical key is `type`.
+
+The reference validator is [`engineering/tooling/validate-syzygy/validate.py`](../tooling/validate-syzygy/validate.py). It uses only the Python standard library. A minimal YAML subset parser is used because PyYAML is not guaranteed on runners, so the validator accepts only the flat and one-level-nested manifest forms used in the org. Usage:
+
+```bash
+python3 path/to/.github/engineering/tooling/validate-syzygy/validate.py --report-only path/to/repo/syzygy.yml
+```
+
+- `--report-only` (the default when run from CI) prints PASS, WARN or FAIL for each file and exits 0.
+- Without `--report-only`, the script exits non-zero when any file is FAIL.
+- Callers pass one or more manifest paths. Quote paths that contain spaces (for example `"UI Libraries/ios/src/syzygy-ui-ios/syzygy.yml"`).
+
+**Planned for 3.0.1:** a Hub input `syzygy_validation: report-only` on the release workflows, so that every release runs the validator and records the result without blocking. This is a planned item only. It is not in 3.0.0 and no workflow implements it yet.
+
+---
+
+## Lockfile Policy
+
+Lockfiles follow the kind of artefact the repo produces.
+
+| Repo kind | `package-lock.json` (RN) | `Package.resolved` (SwiftPM) | `pubspec.lock` (Dart/Flutter) | `Podfile.lock` (iOS app) | `gradle` lock files |
+|---|---|---|---|---|---|
+| RN library | **Commit** (release CI needs it for `npm ci`) | n/a | n/a | n/a | n/a |
+| SwiftPM library | n/a | **Do not commit** (add to `.gitignore`) | n/a | n/a | n/a |
+| Dart / Flutter library | n/a | n/a | **Do not commit** (add to `.gitignore`) | n/a | n/a |
+| App (any platform) | Commit | Commit | Commit | **Commit** | Commit where the build uses lock files |
+
+Rules:
+
+- RN libraries keep `package-lock.json` committed. The release CI runs `npm ci`, which requires the lock file.
+- SwiftPM libraries and Dart/Flutter libraries do **not** commit `Package.resolved` or `pubspec.lock`. Libraries are consumed through version ranges, so a committed lock file only adds noise and can mask resolution problems in consumers.
+- Apps commit every lock file, including `Podfile.lock`, so builds are reproducible.
+
+Audit note (workspace snapshot): `UI Libraries/ios/src/syzygy-ui-ios/Package.resolved` and `UI Libraries/flutter/src/syzygy-ui-flutter/pubspec.lock` are present in the working trees of two library repos. They do not match this policy and need removal from the tracked files in those repos. This document does not change those repos; the owners must act on it.
+
+---
+
+## Required CI recipes: library versus app
+
+Caller workflows for each platform are provided as templates in [`engineering/templates/`](../templates/):
+
+- Libraries: `ci-library-{ios,android,rn,flutter}.yml.template` and `release-library-{ios,android,rn,flutter}.yml.template`
+- Apps: `ci-app-{ios,android,rn,flutter}.yml.template` and `release-app-{ios,android,rn,flutter}.yml.template`
+
+Differences:
+
+- **Library** CI runs the build, lint, unit tests and coverage. It does not run device or simulator smoke tests unless the library explicitly needs them. Release creates the GitHub Release. Registry publishing is platform-specific. Flutter publishes to pub.dev inside `flutter-release.yml`. React Native publishes to npm from each caller's own `publish-npm` job, because npm OIDC trusted publishing needs the caller's workflow file. iOS (SPM) and Android (JitPack) publish nothing beyond the GitHub Release, since the tag is the artefact. Apps (`app-release.yml`) publish nothing.
+- **App** CI additionally runs build smoke tests and may run native smoke tests (`build_smoke_*`, `native_smoke_*`). Release uses the no-publish mode (`app-release.yml`): it validates the version, extracts the CHANGELOG and creates a GitHub Release, but never publishes to a registry.
+
+The input names used by the templates are listed in [`engineering/templates/`](../templates/) and documented in [`.github/workflows/README.md`](../../.github/workflows/README.md), which the workflow owners maintain. Do not copy input descriptions from this document; read them from the workflows README.
+
+---
+
+## Licence holder (PENDING DECISION)
+
+The legal holder named in the licence text is **not yet chosen**. This is an explicit open decision. Until the owner decides, the MIT licence text is not changed, and no repo should add a LICENSE file that names a holder. The decision belongs to the Syzygy-Hub owner. Record the outcome in this section once made.
+
+---
+
+## Semantic version tags
+
+Tags are bare strict semver: `MAJOR.MINOR.PATCH`, for example `3.0.0`. Do not use a `v` prefix for new tags. The release CI glob `[0-9]+.[0-9]+.[0-9]+` matches only bare tags. The full policy is in [`release-standard.md`](release-standard.md).
 
 ---
 
@@ -184,7 +249,7 @@ Each repo fetches its lint config from the canonical source in this repo:
 | Flutter app/package | `engineering/tooling/flutter/analysis_options.yaml` (`flutter_lints`) |
 | Pure-Dart library | `engineering/tooling/dart/analysis_options.yaml` (`lints`) |
 
-Foundation, Core, Services, and AI Flutter repos are pure-Dart libraries (no Flutter SDK dependency) and must use the `dart/` config. Flutter app/package repos (Base Flutter, example apps) use the `flutter/` config. The pre-push hook auto-detects which applies. See [`engineering/hooks/README.md`](../../hooks/README.md) for details.
+Foundation, Core, Services, and AI Flutter repos are pure-Dart libraries (no Flutter SDK dependency) and must use the `dart/` config. Flutter app/package repos (Base Flutter, example apps) use the `flutter/` config. The pre-push hook auto-detects which applies. See [`engineering/hooks/README.md`](../hooks/README.md) for details.
 
 Store a local copy under `tooling/{platform}/` in each repo. CI fetches the canonical version fresh on each run.
 
@@ -196,7 +261,7 @@ To catch lint violations before CI, install the pre-push hook:
 sh path/to/.github/engineering/hooks/setup-hooks.sh
 ```
 
-The hook auto-detects your repo platform and runs the same lint checks that CI runs, using the same canonical configs. It blocks pushes on lint failure. See [`engineering/hooks/README.md`](../../hooks/README.md) for full details, escape hatches, and troubleshooting.
+The hook auto-detects your repo platform and runs the same lint checks that CI runs, using the same canonical configs. It blocks pushes on lint failure. See [`engineering/hooks/README.md`](../hooks/README.md) for full details, escape hatches, and troubleshooting.
 
 ### RN ESLint config variants
 

@@ -1,0 +1,160 @@
+name: CI Gate (reusable)
+
+# Reusable CI gate. Opt-in only: a caller adopts it explicitly. No existing caller uses it.
+# Verifies that the caller's CI workflow (ci_workflow_name) has a successful completed run
+# for the commit passed as `sha`. Call it from a `gate` job that the release job `needs`.
+#
+# Permissions: this is the ONLY Hub workflow that requests actions: read, at job level.
+# A called job cannot exceed the caller's grant, so the caller's top-level permissions
+# must also include actions: read. See docs/ and engineering/standards/release-standard.md.
+#
+# Modes (ci_gate):
+#   off     - skipped. A ::notice:: and a summary row are written. CI status is not checked.
+#   warn    - a non-success result emits ::warning::[category] and the job passes (exit 0).
+#   enforce - a non-success result emits ::error::[category] and the job fails (exit 1).
+# Categories: success | no-run | in-progress | failed | missing-permission | api-error
+#             | invalid-sha | invalid-mode
+# Default is enforce, because adoption is an explicit choice.
+# skip_ci_gate has been removed. Use ci_gate: off.
+
+on:
+  workflow_call:
+    inputs:
+      sha:
+        description: "Commit SHA to verify. Callers pass github.sha as this value (in a reusable workflow, github.sha is the caller's tagged commit)."
+        type: string
+        required: true
+      ci_workflow_name:
+        description: "Filename of the caller's CI workflow that must have a successful completed run for the SHA, e.g. ci.yml."
+        type: string
+        default: ci.yml
+      ci_gate:
+        description: "CI gate mode: off | warn | enforce. off skips the check (notice only). warn reports a non-success result and still passes. enforce fails on any non-success result. Default enforce."
+        type: string
+        default: enforce
+
+permissions: {}
+
+jobs:
+  gate:
+    name: CI gate
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read # read CI run results for the commit
+      contents: read
+    outputs:
+      result: ${{ steps.gate.outputs.RESULT }}
+    steps:
+      - name: CI gate
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+          SHA: ${{ inputs.sha }}
+          CI_WORKFLOW: ${{ inputs.ci_workflow_name }}
+          MODE: ${{ inputs.ci_gate }}
+        run: |
+          set -uo pipefail
+          ERR_FILE=""
+          trap 'if [[ -n "$ERR_FILE" ]]; then rm -f "$ERR_FILE"; fi' EXIT
+
+          esc() { local v="$1"; printf '%s' "${v//|/\\|}"; }
+
+          # $1 = category, $2 = outcome, $3 = message
+          write_summary() {
+            {
+              echo "## CI gate"
+              echo ""
+              echo "| Field | Value |"
+              echo "|---|---|"
+              echo "| Mode (ci_gate) | \`$(esc "$MODE")\` |"
+              echo "| Commit | \`$(esc "$SHA")\` |"
+              echo "| CI workflow | \`$(esc "$CI_WORKFLOW")\` |"
+              echo "| Category | \`$1\` |"
+              echo "| Outcome | $2 |"
+              echo ""
+              echo "$3"
+            } >> "$GITHUB_STEP_SUMMARY"
+            echo "RESULT=$1" >> "$GITHUB_OUTPUT"
+          }
+
+          case "$MODE" in
+            off|warn|enforce) ;;
+            *)
+              echo "::error::[invalid-mode] ci_gate must be 'off', 'warn' or 'enforce' (got '$MODE')."
+              write_summary invalid-mode "BLOCKED (invalid input)" "ci_gate must be 'off', 'warn' or 'enforce'. Fix the caller's ci_gate value."
+              exit 1
+              ;;
+          esac
+
+          if [[ "$MODE" == "off" ]]; then
+            echo "::notice::[off] CI gate is off (ci_gate=off). CI status for $SHA was not checked."
+            write_summary off "SKIPPED (not checked)" "CI gate is off. CI status for this commit was not checked."
+            exit 0
+          fi
+
+          CAT=""
+          MSG=""
+          if [[ ! "$SHA" =~ ^[0-9a-f]{40}$ ]]; then
+            CAT=invalid-sha
+            MSG="sha input '$SHA' is not a 40-character lowercase commit SHA. The caller must pass github.sha."
+          else
+            ERR_FILE=$(mktemp)
+            # Classify the newest completed run. Runs of any status are fetched, so an
+            # in-progress-only result can be told apart from no run at all.
+            JQ_CLASSIFY='if (.workflow_runs | length) == 0 then "no-run"
+              else
+                ([.workflow_runs[] | select(.status == "completed")] | sort_by(.created_at) | last) as $last
+                | if $last == null then "in-progress"
+                  elif $last.conclusion == "success" then "success"
+                  else "failed:" + ($last.conclusion // "none")
+                  end
+              end'
+            OUT=$(gh api "repos/$REPO/actions/workflows/$CI_WORKFLOW/runs?head_sha=$SHA&per_page=100" \
+              --jq "$JQ_CLASSIFY" 2> "$ERR_FILE")
+            RC=$?
+            if [[ $RC -ne 0 ]]; then
+              ERR_MSG=$(head -c 300 "$ERR_FILE" | tr '\n' ' ')
+              if grep -q 'HTTP 403' "$ERR_FILE" && ! grep -qi 'rate limit' "$ERR_FILE"; then
+                CAT=missing-permission
+                MSG="API returned HTTP 403 for '$CI_WORKFLOW' runs on $SHA. The caller most likely lacks 'actions: read' at the level this job needs."
+              else
+                CAT=api-error
+                MSG="API error (gh exit $RC) for '$CI_WORKFLOW' runs on $SHA: $ERR_MSG"
+              fi
+            else
+              case "$OUT" in
+                success)
+                  CAT=success
+                  MSG="Latest completed '$CI_WORKFLOW' run for $SHA succeeded." ;;
+                no-run)
+                  CAT=no-run
+                  MSG="No '$CI_WORKFLOW' run exists for $SHA. CI must run on this commit before the tag is pushed." ;;
+                in-progress)
+                  CAT=in-progress
+                  MSG="'$CI_WORKFLOW' runs for $SHA exist but none has completed (queued or in progress)." ;;
+                failed:*)
+                  CAT=failed
+                  MSG="Latest completed '$CI_WORKFLOW' run for $SHA concluded '${OUT#failed:}', not 'success'." ;;
+                *)
+                  CAT=api-error
+                  MSG="Unexpected response classifying '$CI_WORKFLOW' runs on $SHA: '$(head -c 200 <<< "$OUT")'." ;;
+              esac
+            fi
+          fi
+
+          if [[ "$CAT" == "success" ]]; then
+            echo "::notice::[success] $MSG"
+            write_summary success "PASSED" "$MSG"
+            exit 0
+          fi
+
+          if [[ "$MODE" == "warn" ]]; then
+            echo "::warning::[$CAT] $MSG Release NOT blocked (ci_gate=warn)."
+            write_summary "$CAT" "WARNING, not blocked (ci_gate=warn)" "$MSG"
+            exit 0
+          fi
+
+          echo "::error::[$CAT] $MSG Release BLOCKED (ci_gate=enforce)."
+          write_summary "$CAT" "BLOCKED (ci_gate=enforce)" "$MSG"
+          exit 1

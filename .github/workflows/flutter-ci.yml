@@ -12,7 +12,12 @@ on:
         required: false
         type: string
         default: 'stable'
-        description: 'Flutter version or channel (stable, beta, or a version like 3.22.0). Only used when the repo is detected as a Flutter app/package.'
+        description: 'Flutter version (e.g. 3.35.0) or channel (stable, beta, master). Only used for Flutter repos. Channel names select the latest build on that channel.'
+      dart_sdk_version:
+        required: false
+        type: string
+        default: ''
+        description: 'Dart SDK version for pure-Dart repos (e.g. 3.9.0). Empty means the latest stable Dart SDK. Ignored for Flutter repos.'
       upload_artifacts:
         required: false
         type: boolean
@@ -23,132 +28,325 @@ on:
         type: string
         default: 'main'
         description: 'Ref of Syzygy-Hub/.github to fetch tooling configs from. Defaults to main.'
+      working_directory:
+        required: false
+        type: string
+        default: '.'
+        description: 'Directory containing pubspec.yaml, relative to the repository root.'
+      runner:
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+        description: 'Runner label for the analysis/test job and the Android build smoke job.'
+      use_local_analysis_options:
+        required: false
+        type: boolean
+        default: false
+        description: 'Opt-in: keep a repo-root analysis_options.yaml if present and fetch the Hub config only when it is absent. Default false overwrites any local file with the Hub config (flutter or dart variant, per auto-detect).'
+      build_smoke_android:
+        required: false
+        type: boolean
+        default: false
+        description: 'Opt-in: run `flutter build apk --debug` in <working_directory> (requires android/).'
+      build_smoke_ios:
+        required: false
+        type: boolean
+        default: false
+        description: 'Opt-in: run `flutter build ios --debug --no-codesign` on macos-latest (requires ios/).'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Superseded runs are cancelled on every ref except the default branch.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  detect:
+    name: detect-project-type
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 5
+    outputs:
+      type: ${{ steps.detect.outputs.type }}
     steps:
       - uses: actions/checkout@v4
 
       - name: Detect repo type (Flutter vs pure-Dart)
         id: detect
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: |
-          if grep -qE '^[[:space:]]+sdk:[[:space:]]*flutter' pubspec.yaml 2>/dev/null; then
+          set -euo pipefail
+          if [ ! -f pubspec.yaml ]; then
+            echo "::error::pubspec.yaml not found in working_directory '${{ inputs.working_directory }}'"
+            exit 1
+          fi
+          if grep -qE '^[[:space:]]+sdk:[[:space:]]*flutter' pubspec.yaml; then
             echo "type=flutter" >> "$GITHUB_OUTPUT"
             echo "Detected: Flutter app/package (sdk: flutter found in pubspec.yaml)"
+            echo "- Project type: Flutter" >> "$GITHUB_STEP_SUMMARY"
           else
             echo "type=dart" >> "$GITHUB_OUTPUT"
             echo "Detected: pure-Dart library (no sdk: flutter in pubspec.yaml)"
+            echo "- Project type: pure Dart" >> "$GITHUB_STEP_SUMMARY"
           fi
 
+  build-and-test:
+    name: build-and-test
+    needs: detect
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
       # --- Flutter setup (Flutter repos only) ---
-      - name: Set up Flutter
-        if: steps.detect.outputs.type == 'flutter'
+      # subosito/flutter-action takes either a version or a channel. Channel names
+      # go in `channel`; anything else is passed as `flutter-version`.
+      - name: Set up Flutter (channel)
+        if: ${{ needs.detect.outputs.type == 'flutter' && (inputs.flutter_version == 'stable' || inputs.flutter_version == 'beta' || inputs.flutter_version == 'master') }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ inputs.flutter_version }}
+          cache: true
+
+      - name: Set up Flutter (version)
+        if: ${{ needs.detect.outputs.type == 'flutter' && inputs.flutter_version != 'stable' && inputs.flutter_version != 'beta' && inputs.flutter_version != 'master' }}
         uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ inputs.flutter_version }}
-          channel: stable
+          cache: true
 
       # --- Dart setup (pure-Dart repos only) ---
-      - name: Set up Dart
-        if: steps.detect.outputs.type == 'dart'
+      - name: Set up Dart (latest stable)
+        if: ${{ needs.detect.outputs.type == 'dart' && inputs.dart_sdk_version == '' }}
         uses: dart-lang/setup-dart@v1
 
-      # --- Fetch analysis config ---
-      - name: Fetch Flutter analysis config
-        if: steps.detect.outputs.type == 'flutter'
-        run: |
-          curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/flutter/analysis_options.yaml" \
-            -o analysis_options.yaml
+      - name: Set up Dart (pinned)
+        if: ${{ needs.detect.outputs.type == 'dart' && inputs.dart_sdk_version != '' }}
+        uses: dart-lang/setup-dart@v1
+        with:
+          sdk: ${{ inputs.dart_sdk_version }}
 
-      - name: Fetch Dart analysis config
-        if: steps.detect.outputs.type == 'dart'
+      # --- Pub cache ---
+      - name: Cache pub packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.pub-cache
+          # Apps commit pubspec.lock; libraries do not, so fall back to pubspec.yaml.
+          # hashFiles returns '' when a file is absent, so '||' selects the first non-empty hash.
+          key: pub-${{ runner.os }}-${{ hashFiles(format('{0}/pubspec.lock', inputs.working_directory)) || hashFiles(format('{0}/pubspec.yaml', inputs.working_directory)) }}
+          restore-keys: |
+            pub-${{ runner.os }}-
+
+      # --- Analysis config ---
+      # Default: the Hub config (Flutter: engineering/tooling/flutter/, pure Dart:
+      # engineering/tooling/dart/) is fetched and OVERWRITES any repo-root
+      # analysis_options.yaml. With use_local_analysis_options: true, a local file
+      # is kept and the Hub config is fetched only when none exists.
+      - name: Resolve analysis config
+        id: analysis
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          PROJECT_TYPE: ${{ needs.detect.outputs.type }}
+          ORG_SHA: ${{ inputs.org_config_sha }}
+          USE_LOCAL: ${{ inputs.use_local_analysis_options }}
         run: |
-          curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/dart/analysis_options.yaml" \
-            -o analysis_options.yaml
+          set -euo pipefail
+          if [ "$PROJECT_TYPE" = "flutter" ]; then
+            SUBDIR=flutter
+          else
+            SUBDIR=dart
+          fi
+          if [ "$USE_LOCAL" = "true" ] && [ -f analysis_options.yaml ]; then
+            echo "Using repo-local analysis_options.yaml (use_local_analysis_options: true; Hub config not fetched)."
+            echo "source=local" >> "$GITHUB_OUTPUT"
+          else
+            curl -fsSL \
+              "https://raw.githubusercontent.com/Syzygy-Hub/.github/${ORG_SHA}/engineering/tooling/${SUBDIR}/analysis_options.yaml" \
+              -o analysis_options.yaml
+            echo "Fetched Hub ${SUBDIR} analysis_options.yaml (overwrote any local copy)."
+            echo "source=hub-${SUBDIR}" >> "$GITHUB_OUTPUT"
+          fi
 
       # --- Install dependencies ---
       - name: Install dependencies (Flutter)
-        if: steps.detect.outputs.type == 'flutter'
+        if: ${{ needs.detect.outputs.type == 'flutter' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: flutter pub get
 
       - name: Install dependencies (Dart)
-        if: steps.detect.outputs.type == 'dart'
+        if: ${{ needs.detect.outputs.type == 'dart' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: dart pub get
 
       # --- Analyze ---
       - name: Analyze (Flutter)
-        if: steps.detect.outputs.type == 'flutter'
+        if: ${{ needs.detect.outputs.type == 'flutter' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: flutter analyze --fatal-warnings
 
       - name: Analyze (Dart)
-        if: steps.detect.outputs.type == 'dart'
+        if: ${{ needs.detect.outputs.type == 'dart' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: dart analyze --fatal-warnings
 
-      # --- Test with coverage ---
+      # --- Test (failures fail the job; no masking) ---
       - name: Test with coverage (Flutter)
-        if: ${{ inputs.coverage && steps.detect.outputs.type == 'flutter' }}
-        run: |
-          flutter test --coverage
-          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
-          if command -v lcov &> /dev/null; then
-            lcov --summary coverage/lcov.info 2>&1 | tee coverage-summary.txt
-            cat coverage-summary.txt >> "$GITHUB_STEP_SUMMARY"
-          else
-            if [ -f coverage/lcov.info ]; then
-              LINES_FOUND=$(grep -c "^DA:" coverage/lcov.info || echo 0)
-              LINES_HIT=$(grep "^DA:" coverage/lcov.info | grep -cv ",0$" || echo 0)
-              echo "Lines found: $LINES_FOUND" >> "$GITHUB_STEP_SUMMARY"
-              echo "Lines hit: $LINES_HIT" >> "$GITHUB_STEP_SUMMARY"
-              if [ "$LINES_FOUND" -gt 0 ]; then
-                PCT=$(( LINES_HIT * 100 / LINES_FOUND ))
-                echo "Coverage: ${PCT}%" >> "$GITHUB_STEP_SUMMARY"
-              fi
-            else
-              echo "Coverage data generated at \`coverage/lcov.info\`" >> "$GITHUB_STEP_SUMMARY"
-              echo "Install lcov to display a line-coverage summary." >> "$GITHUB_STEP_SUMMARY"
-            fi
-          fi
+        if: ${{ inputs.coverage && needs.detect.outputs.type == 'flutter' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: flutter test --coverage
 
       - name: Test with coverage (Dart)
-        if: ${{ inputs.coverage && steps.detect.outputs.type == 'dart' }}
-        run: dart test --coverage=coverage
-
-      - name: Coverage summary (Dart)
-        if: ${{ inputs.coverage && steps.detect.outputs.type == 'dart' }}
+        if: ${{ inputs.coverage && needs.detect.outputs.type == 'dart' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: |
-          if [ -f coverage/lcov.info ]; then
-            LINES_FOUND=$(grep -c "^DA:" coverage/lcov.info || echo 0)
-            LINES_HIT=$(grep "^DA:" coverage/lcov.info | grep -cv ",0$" || echo 0)
-            {
-              echo "## Coverage Report"
-              echo "Lines found: $LINES_FOUND"
-              echo "Lines hit: $LINES_HIT"
-              if [ "$LINES_FOUND" -gt 0 ]; then
-                PCT=$(( LINES_HIT * 100 / LINES_FOUND ))
-                echo "Coverage: ${PCT}%"
-              fi
-            } >> "$GITHUB_STEP_SUMMARY"
-          else
-            echo "## Coverage Report — lcov.info not found." >> "$GITHUB_STEP_SUMMARY"
-          fi
+          set -euo pipefail
+          dart test --coverage=coverage
+          # `dart test --coverage` writes JSON; convert it to lcov.info for the summary.
+          dart pub global activate coverage
+          dart pub global run coverage:format_coverage \
+            --lcov --in=coverage --out=coverage/lcov.info \
+            --packages=.dart_tool/package_config.json --report-on=lib
 
-      # --- Test without coverage ---
+      - name: Coverage summary
+        if: ${{ inputs.coverage }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          {
+            echo "## Coverage Report"
+            if [ ! -f coverage/lcov.info ]; then
+              echo "coverage/lcov.info not found."
+            elif command -v lcov >/dev/null 2>&1; then
+              lcov --summary coverage/lcov.info 2>&1
+            else
+              # Count lines from lcov DA records (format DA:<line>,<hits>).
+              found=$(awk -F'[:,]' '/^DA:/ {n++} END {print n+0}' coverage/lcov.info)
+              hit=$(awk -F'[:,]' '/^DA:/ && $3+0 > 0 {n++} END {print n+0}' coverage/lcov.info)
+              echo "Lines found: $found"
+              echo "Lines hit: $hit"
+              if [ "$found" -gt 0 ]; then
+                echo "Coverage: $(( hit * 100 / found ))%"
+              fi
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Test without coverage (Flutter)
-        if: ${{ !inputs.coverage && steps.detect.outputs.type == 'flutter' }}
+        if: ${{ !inputs.coverage && needs.detect.outputs.type == 'flutter' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: flutter test
 
       - name: Test without coverage (Dart)
-        if: ${{ !inputs.coverage && steps.detect.outputs.type == 'dart' }}
+        if: ${{ !inputs.coverage && needs.detect.outputs.type == 'dart' }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: dart test
 
-      # --- Upload coverage artifact ---
       - name: Upload coverage
-        if: always() && inputs.upload_artifacts
+        if: always() && inputs.coverage && inputs.upload_artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage/
+          path: ${{ inputs.working_directory }}/coverage/
           if-no-files-found: warn
+
+      - name: Job summary
+        if: always()
+        shell: bash
+        env:
+          ANALYSIS_SOURCE: ${{ steps.analysis.outputs.source }}
+        run: |
+          {
+            echo "## Flutter build-and-test"
+            echo "- Working directory: \`${{ inputs.working_directory }}\`"
+            echo "- Type: \`${{ needs.detect.outputs.type }}\`"
+            echo "- Flutter version/channel: \`${{ inputs.flutter_version }}\` (Dart SDK pin: \`${{ inputs.dart_sdk_version || 'default' }}\`)"
+            echo "- Analysis config: ${ANALYSIS_SOURCE:-not resolved}"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  build-smoke-android:
+    name: build-smoke-android
+    needs: detect
+    if: ${{ inputs.build_smoke_android && needs.detect.outputs.type == 'flutter' }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Set up Flutter (channel)
+        if: ${{ inputs.flutter_version == 'stable' || inputs.flutter_version == 'beta' || inputs.flutter_version == 'master' }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ inputs.flutter_version }}
+          cache: true
+
+      - name: Set up Flutter (version)
+        if: ${{ inputs.flutter_version != 'stable' && inputs.flutter_version != 'beta' && inputs.flutter_version != 'master' }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ inputs.flutter_version }}
+          cache: true
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          test -d android || { echo "::error::android/ directory not found in ${{ inputs.working_directory }}"; exit 1; }
+          flutter pub get
+
+      - name: Build debug APK
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: flutter build apk --debug
+
+  build-smoke-ios:
+    name: build-smoke-ios
+    needs: detect
+    if: ${{ inputs.build_smoke_ios && needs.detect.outputs.type == 'flutter' }}
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Flutter (channel)
+        if: ${{ inputs.flutter_version == 'stable' || inputs.flutter_version == 'beta' || inputs.flutter_version == 'master' }}
+        uses: subosito/flutter-action@v2
+        with:
+          channel: ${{ inputs.flutter_version }}
+          cache: true
+
+      - name: Set up Flutter (version)
+        if: ${{ inputs.flutter_version != 'stable' && inputs.flutter_version != 'beta' && inputs.flutter_version != 'master' }}
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ inputs.flutter_version }}
+          cache: true
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          test -d ios || { echo "::error::ios/ directory not found in ${{ inputs.working_directory }}"; exit 1; }
+          flutter pub get
+
+      - name: Build debug iOS (no codesign)
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: flutter build ios --debug --no-codesign

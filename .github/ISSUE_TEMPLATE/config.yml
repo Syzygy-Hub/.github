@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Syzygy-Hub/.github/blob/main/SECURITY.md
+    about: Do not report security issues publicly. Follow the security policy.
+  - name: Engineering standards
+    url: https://github.com/Syzygy-Hub/.github/tree/main/engineering/standards
+    about: Read the repository, release and AI contract standards before you ask a process question.

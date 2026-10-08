@@ -331,7 +331,7 @@ Releases follow a tag-based flow:
 3. Update `CHANGELOG.md`
 4. Open PR → `main`, get approval and merge
 5. Push the version tag: `git tag X.X.X && git push origin X.X.X`
-6. CI validates the tag, publishes, and creates the GitHub Release automatically
+6. CI validates the tag and creates the GitHub Release automatically. Registry publishing depends on the platform; see the release standard.
 
 See the [Syzygy Release Standard](https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/release-standard.md) for full details.
 ```

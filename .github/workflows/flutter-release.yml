@@ -1,62 +1,175 @@
 name: Flutter Release
 
+# Reusable release workflow. Triggered ONLY by callers (workflow_call).
+# Tag triggers live in each caller's release.yml, not here.
+#
+# Flow: validate (tag, syzygy.yml, CHANGELOG and pub_auth checks; contents: read only)
+#       -> release (CHANGELOG, pubspec assert, pub.dev publish, GitHub Release, optional website notification).
+# pubspec.yaml is NOT rewritten at publish time: it must already equal syzygy.yml exactly.
+#
+# The CI gate is NOT run here. A caller that wants it adds its own 'gate' job that calls
+# ci-gate.yml and makes 'release' depend on it (see the commented example in the release templates).
+
 on:
   workflow_call:
-  push:
-    tags:
-      - '[0-9]+.[0-9]+.[0-9]+'
+    inputs:
+      ci_workflow_name:
+        description: "No longer used: the CI gate moved to ci-gate.yml. Accepted and ignored so existing callers do not fail."
+        type: string
+        default: ci.yml
+      allow_empty_notes:
+        description: Allow a release when CHANGELOG.md has no entry for the version (generic notes are used).
+        type: boolean
+        default: false
+      pub_auth:
+        description: "'credentials' (default) uses the PUB_CREDENTIALS secret. 'oidc' uses pub.dev automated publishing (must be enabled per package on pub.dev first). oidc is prepared but NOT enabled by any caller."
+        type: string
+        default: credentials
+      notify_website_repo:
+        description: "Optional owner/repo (e.g. Syzygy-Hub/website). When set and WEBSITE_DISPATCH_TOKEN is passed, a repository_dispatch (event_type syzygy-release) is sent after a successful release. Empty (default) = off."
+        type: string
+        default: ''
+    secrets:
+      PUB_CREDENTIALS:
+        required: false
+      WEBSITE_DISPATCH_TOKEN:
+        required: false
+
+permissions: {}
 
 jobs:
+  validate:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate inputs, tag and syzygy.yml version
+        id: version
+        env:
+          TAG: ${{ github.ref_name }}
+          PUB_AUTH: ${{ inputs.pub_auth }}
+        run: |
+          set -euo pipefail
+          if [[ "$PUB_AUTH" != "credentials" && "$PUB_AUTH" != "oidc" ]]; then
+            echo "::error::pub_auth must be 'credentials' or 'oidc' (got '$PUB_AUTH')."
+            exit 1
+          fi
+          if [[ "$TAG" == v* ]]; then
+            echo "::error::Tag '$TAG' is v-prefixed. Release tags must be bare semver without a v, e.g. 3.0.0."
+            exit 1
+          fi
+          if [[ "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+[-+] ]]; then
+            echo "::error::Tag '$TAG' is a pre-release or has build metadata. Release tags must be strict MAJOR.MINOR.PATCH, e.g. 3.0.0."
+            exit 1
+          fi
+          if [[ ! "$TAG" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Tag '$TAG' is not strict semver (MAJOR.MINOR.PATCH, e.g. 3.0.0)."
+            exit 1
+          fi
+          RAW=$(sed -nE 's/^version:(.*)$/\1/p' syzygy.yml | sed -n '1p')
+          RAW="${RAW%%#*}"
+          RAW="${RAW//[[:space:]]/}"
+          RAW="${RAW//\"/}"
+          RAW="${RAW//\'/}"
+          if [[ -z "$RAW" ]]; then
+            echo "::error::No 'version:' found in syzygy.yml."
+            exit 1
+          fi
+          if [[ "$RAW" != "$TAG" ]]; then
+            echo "::error::syzygy.yml version ($RAW) does not match pushed tag ($TAG). Both must be exactly the same bare semver."
+            exit 1
+          fi
+          echo "VERSION=$RAW" >> "$GITHUB_OUTPUT"
+
   release:
+    needs: validate
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      # id-token is only used when pub_auth == 'oidc' (pub.dev OIDC). It is inert in 'credentials' mode.
       id-token: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Read and validate version
-        id: version
-        run: |
-          VERSION=$(grep '^version:' syzygy.yml | sed 's/version: //' | tr -d ' ')
-          TAG=${{ github.ref_name }}
-          if [ "$VERSION" != "$TAG" ]; then
-            echo "::error::syzygy.yml version ($VERSION) does not match pushed tag ($TAG)"
-            exit 1
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
 
       - name: Extract CHANGELOG entry
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
+          ALLOW_EMPTY_NOTES: ${{ inputs.allow_empty_notes }}
         run: |
-          awk '/^## \[/{if(found) exit; found=1; next} found' CHANGELOG.md > release_notes.txt
+          set -euo pipefail
+          if [[ ! -f CHANGELOG.md ]]; then
+            echo "::error::CHANGELOG.md not found."
+            exit 1
+          fi
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 { found = 1; next }
+            found && /^## \[/ { exit }
+            found { print }
+          ' CHANGELOG.md > release_notes.txt
+          if [[ -z "$(tr -d '[:space:]' < release_notes.txt)" ]]; then
+            if [[ "$ALLOW_EMPTY_NOTES" == "true" ]]; then
+              echo "::warning::CHANGELOG.md has no non-empty entry for $VERSION; using generic release notes (allow_empty_notes=true)."
+              echo "Release $VERSION" > release_notes.txt
+            else
+              echo "::error::CHANGELOG.md has no entry for $VERSION (or it is empty). Add a '## [$VERSION] - YYYY-MM-DD' section, or set allow_empty_notes: true."
+              exit 1
+            fi
+          fi
 
       - name: Set up Flutter
         uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Setup pub credentials
+      - name: Setup pub credentials (pub_auth=credentials)
+        if: ${{ inputs.pub_auth == 'credentials' }}
+        env:
+          PUB_CREDENTIALS: ${{ secrets.PUB_CREDENTIALS }}
         run: |
-          mkdir -p $HOME/.config/dart
-          echo '${{ secrets.PUB_CREDENTIALS }}' > $HOME/.config/dart/pub-credentials.json
+          set -euo pipefail
+          if [[ -z "$PUB_CREDENTIALS" ]]; then
+            echo "::error::PUB_CREDENTIALS secret is empty or not passed to this workflow (caller needs 'secrets: inherit')."
+            exit 1
+          fi
+          mkdir -p "$HOME/.config/dart"
+          printf '%s' "$PUB_CREDENTIALS" > "$HOME/.config/dart/pub-credentials.json"
 
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Sync pubspec.yaml version
+      - name: Assert pubspec.yaml version matches syzygy.yml
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          VERSION=${{ steps.version.outputs.VERSION }}
-          sed -i "s/^version: .*/version: $VERSION/" pubspec.yaml
+          set -euo pipefail
+          # Exact equality with syzygy.yml, build suffix included: pubspec 3.0.0+1 fails against 3.0.0.
+          PUBSPEC_VERSION=$(sed -nE 's/^version:(.*)$/\1/p' pubspec.yaml | sed -n '1p')
+          PUBSPEC_VERSION="${PUBSPEC_VERSION%%#*}"
+          PUBSPEC_VERSION="${PUBSPEC_VERSION//[[:space:]]/}"
+          PUBSPEC_VERSION="${PUBSPEC_VERSION//\"/}"
+          PUBSPEC_VERSION="${PUBSPEC_VERSION//\'/}"
+          if [[ "$PUBSPEC_VERSION" != "$VERSION" ]]; then
+            echo "::error::pubspec.yaml version ('$PUBSPEC_VERSION') does not match syzygy.yml version ('$VERSION'). Fix pubspec.yaml in the repo; the release no longer rewrites it."
+            exit 1
+          fi
 
-      - name: Publish to pub.dev
+      - name: Publish to pub.dev (credentials)
+        if: ${{ inputs.pub_auth == 'credentials' }}
         run: flutter pub publish --force
 
+      - name: Publish to pub.dev (OIDC)
+        if: ${{ inputs.pub_auth == 'oidc' }}
+        run: dart pub publish --force
+
       - name: Wait for pub.dev propagation
+        env:
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          PACKAGE_NAME=$(grep '^name:' pubspec.yaml | sed 's/name: //' | tr -d ' ')
-          VERSION=${{ steps.version.outputs.VERSION }}
+          PACKAGE_NAME=$(sed -nE 's/^name:[[:space:]]*"?([^"[:space:]]+)"?.*/\1/p' pubspec.yaml | sed -n '1p')
           for i in $(seq 1 30); do
             if curl -s "https://pub.dev/api/packages/$PACKAGE_NAME" | grep -q "\"$VERSION\""; then
               echo "Package $PACKAGE_NAME $VERSION confirmed on pub.dev"
@@ -66,14 +179,55 @@ jobs:
             sleep 10
           done
           if ! curl -s "https://pub.dev/api/packages/$PACKAGE_NAME" | grep -q "\"$VERSION\""; then
-            echo "::warning::Could not confirm propagation of $PACKAGE_NAME $VERSION on pub.dev after 30 attempts — package was published successfully but pub.dev indexing may still be pending"
+            echo "::warning::Could not confirm propagation of $PACKAGE_NAME $VERSION on pub.dev after 30 attempts. Package was published successfully but pub.dev indexing may still be pending. (Intentionally a warning, not a failure.)"
           fi
 
       - name: Create GitHub Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.validate.outputs.version }}
         run: |
-          gh release create "${{ steps.version.outputs.VERSION }}" \
-            --title "${{ steps.version.outputs.VERSION }}" \
+          gh release create "$VERSION" \
+            --title "$VERSION" \
             --notes-file release_notes.txt \
-            --target "${{ github.sha }}"
+            --target "$GITHUB_SHA"
+
+      - name: Notify website repo (optional, off by default)
+        if: ${{ inputs.notify_website_repo != '' }}
+        env:
+          NOTIFY_REPO: ${{ inputs.notify_website_repo }}
+          DISPATCH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN }}
+          REPO: ${{ github.repository }}
+          VERSION: ${{ needs.validate.outputs.version }}
+        run: |
+          # No errexit: every failure below becomes a warning, never a failed release.
+          set +e -uo pipefail
+          # Token not passed (no secrets: inherit, or unset): skip silently.
+          if [[ -z "$DISPATCH_TOKEN" ]]; then
+            exit 0
+          fi
+          if [[ ! "$NOTIFY_REPO" =~ ^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$ ]]; then
+            echo "::warning::notify_website_repo '$NOTIFY_REPO' is not owner/repo. Website notification skipped; the release is not affected."
+            exit 0
+          fi
+          PAYLOAD=$(jq -cn --arg repo "$REPO" --arg tag "$VERSION" --arg version "$VERSION" \
+            '{event_type: "syzygy-release", client_payload: {repo: $repo, tag: $tag, version: $version}}')
+          if [[ -z "$PAYLOAD" ]]; then
+            echo "::warning::Could not build the dispatch payload. Website notification skipped; the release is not affected."
+            exit 0
+          fi
+          CURL_ERR=$(mktemp)
+          HTTP_CODE=$(curl -sS -o /dev/null -w '%{http_code}' -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer $DISPATCH_TOKEN" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            -H "Content-Type: application/json" \
+            --data "$PAYLOAD" \
+            "https://api.github.com/repos/$NOTIFY_REPO/dispatches" 2> "$CURL_ERR")
+          CURL_RC=$?
+          if [[ $CURL_RC -ne 0 || "$HTTP_CODE" != "204" ]]; then
+            ERR_MSG=$(head -c 300 "$CURL_ERR" | tr '\n' ' ')
+            echo "::warning::Website notification to $NOTIFY_REPO failed (curl exit $CURL_RC, HTTP ${HTTP_CODE:-none}). $ERR_MSG The release is not affected."
+            exit 0
+          fi
+          echo "Notified $NOTIFY_REPO of release $VERSION (repository_dispatch: syzygy-release)."

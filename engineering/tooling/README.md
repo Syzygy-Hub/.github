@@ -15,11 +15,15 @@ This folder contains the canonical shared lint configuration files for all Syzyg
 
 **Consumed by:** all `syzygy-*-ios` repos (foundation, ui, core, services, base, and future iOS libraries/apps).
 
-**Fetched via:** the `org_config_sha` input in `ios-ci.yml`. The workflow curls this file into the consuming repo's root as `.swiftlint.yml` before running `swiftlint --config .swiftlint.yml`.
+**Fetched via:** the `org_config_sha` input in `ios-ci.yml`. The workflow curls this file into the consuming repo's root as `.swiftlint.yml` before running `swiftlint --config .swiftlint.yml`. For `spm` projects it overwrites any local `.swiftlint.yml`; for `xcode` projects it is fetched only when the repo has no `.swiftlint.yml`.
+
+**Placement (required):** SwiftLint resolves `included` and `excluded` paths relative to the **config file's location**, not the working directory. The consuming repo must therefore place the fetched file at its root as `.swiftlint.yml`, and run `swiftlint --config .swiftlint.yml` from that root. A copy kept in `tooling/ios/` alone will not apply the `included` paths.
+
+**App layouts:** the canonical `included` list (`Sources`, `Tests`) matches SPM libraries. An Xcode app project keeps its code in an app target folder instead. An app repo must either add its target folder to the `included` list in its local copy, or keep the canonical file unchanged and accept that only the default paths are linted. The canonical file is not edited per app.
 
 **Key rules enforced:**
 
-- **Opt-in rules enabled:** `empty_count` (prefer `.isEmpty` over `.count == 0`), `closure_spacing`, `explicit_init`, `redundant_type_annotation`
+- **Opt-in rules enabled:** `force_unwrapping` (warning via the `force_unwrapping` setting below; opt-in rules must be listed to take effect), `empty_count` (prefer `.isEmpty` over `.count == 0`), `closure_spacing`, `explicit_init`, `redundant_type_annotation`
 - **Disabled rules:** `todo` — TODO/FIXME comments are allowed during active development
 - **Force unwrapping / casting:** `warning` severity (not error) — intentional force-unwraps in tests and static assets are acceptable
 - **Line length:** warning at 120, error at 200; comments and URLs are excluded
@@ -37,13 +41,14 @@ This folder contains the canonical shared lint configuration files for all Syzyg
 
 **Consumed by:** all `syzygy-*-android` repos (foundation, ui, core, services, base, and future Android libraries/apps).
 
-**Fetched via:** the `org_config_sha` input in `android-ci.yml`. The workflow curls this file into the consuming repo's root as `.editorconfig`; ktlint reads it automatically alongside the standard EditorConfig properties.
+**Fetched via:** the `org_config_sha` input in `android-ci.yml`. The workflow curls this file into the consuming repo's root as `.editorconfig` only when the repo has no `.editorconfig`; an existing one is kept. ktlint reads it automatically alongside the standard EditorConfig properties.
 
 **Key rules enforced:**
 
 - **Global:** UTF-8 charset, LF line endings, final newline required, trailing whitespace trimmed, 4-space indent
 - **Kotlin files (`*.{kt,kts}`):** 4-space indent, 120-char max line length, final newline
 - **ktlint standard rules enabled:** `no-wildcard-imports`, `import-ordering`, `max-line-length`, `final-newline`, `no-trailing-spaces`
+- **Compose naming exception:** `ktlint_function_naming_ignore_when_annotated_with = Composable` lets `@Composable` functions use PascalCase. This was upstreamed from individual repos into the shared file. It is a ktlint 1.x property name; confirm it on the ktlint version the consuming build uses.
 - **Trailing commas:** disabled on both call sites and declaration sites — optional stylistic preference, not enforced
 - **YAML/JSON files:** 2-space indent
 - **Markdown files:** trailing whitespace trimmed disabled (allows intentional trailing spaces for line breaks)
@@ -117,7 +122,7 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 
 **Consumed by:** pure-Dart library repos (`syzygy-foundation-flutter`, `syzygy-core-flutter`, `syzygy-services-flutter`, `syzygy-ai-flutter`) — repos that have **no** Flutter SDK dependency and must remain publishable with `dart pub`.
 
-**Fetched via:** the pre-push hook and CI for pure-Dart repos. The hook auto-detects that `pubspec.yaml` has no `sdk: flutter` dependency and fetches this config instead of `flutter/analysis_options.yaml`.
+**Fetched via:** `flutter-ci.yml`, when the repo is detected as pure Dart. By default CI overwrites any repo-root `analysis_options.yaml` with this file (see [Analysis config resolution](#analysis-config-resolution)). The pre-push hook auto-detects that `pubspec.yaml` has no `sdk: flutter` dependency and fetches this config instead of `flutter/analysis_options.yaml`.
 
 **Key rules enforced:**
 
@@ -138,7 +143,7 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 
 **Consumed by:** Flutter app and package repos (`syzygy-base-flutter`, `syzygy-ui-flutter`, and Flutter example apps) — repos that declare `sdk: flutter` as a dependency.
 
-**Fetched via:** the `org_config_sha` input in `flutter-ci.yml`. The workflow curls this file into the consuming repo's root as `analysis_options.yaml` before running `flutter analyze --fatal-warnings`. The pre-push hook auto-detects Flutter repos (via `sdk: flutter` in `pubspec.yaml`) and fetches this config.
+**Fetched via:** `flutter-ci.yml`, when the repo is detected as Flutter (via `sdk: flutter` in `pubspec.yaml`). By default the workflow curls this file (at the `org_config_sha` ref) into the repo root as `analysis_options.yaml`, **overwriting** any local copy, before running `flutter analyze --fatal-warnings`. Set `use_local_analysis_options: true` to opt out (see [Analysis config resolution](#analysis-config-resolution)). The pre-push hook auto-detects Flutter repos and fetches this config.
 
 **Key rules enforced:**
 
@@ -162,6 +167,19 @@ Pass the config filename via the `eslint_config` input to `rn-ci.yml`. The fetch
 | Flutter app/package | `syzygy-base-flutter`, example apps | `tooling/flutter/analysis_options.yaml` (`flutter_lints`) | `flutter analyze` |
 
 The pre-push hook auto-detects which config applies (see [`engineering/hooks/README.md`](../hooks/README.md)). The `dart/` config path was introduced in Foundation v2.0.0.
+
+### Analysis config resolution
+
+`flutter-ci.yml` detects the project type from `pubspec.yaml` and chooses the variant:
+
+- **Flutter** (`sdk: flutter` present): `tooling/flutter/analysis_options.yaml` (`flutter_lints`).
+- **Pure Dart** (no `sdk: flutter`): `tooling/dart/analysis_options.yaml` (`lints`).
+
+Default behaviour (`use_local_analysis_options: false`): CI fetches the chosen variant and **overwrites** any repo-root `analysis_options.yaml`. The repo's local file is not used in CI.
+
+Opt-in (`use_local_analysis_options: true`): a repo-root `analysis_options.yaml` is kept and used. The Hub variant is fetched only when no local file exists.
+
+Local `dart analyze` / `flutter analyze` runs read whatever `analysis_options.yaml` is in the working tree, so a repo's local file can differ from what CI enforces.
 
 ---
 

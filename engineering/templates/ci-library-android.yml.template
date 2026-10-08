@@ -1,0 +1,23 @@
+# Caller workflow: CI for an Android library (JitPack). Copy to .github/workflows/ci.yml.
+# Input names are the planned vocabulary; they are documented in .github/workflows/README.md
+# of Syzygy-Hub/.github. java_version must match jvmToolchain() in build.gradle.kts.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/android-ci.yml@main
+    with:
+      project_type: library
+      working_directory: '.'
+      runner: ubuntu-latest
+      java_version: '17'
+      coverage: true
+      upload_artifacts: true
+      instrumented_tests: false
+      org_config_sha: 'main'

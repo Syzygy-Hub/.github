@@ -1,0 +1,22 @@
+# Caller workflow: CI for an iOS library (SwiftPM). Copy to .github/workflows/ci.yml.
+# Input names are the planned vocabulary; they are documented in .github/workflows/README.md
+# of Syzygy-Hub/.github. Replace TODO values before use.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/ios-ci.yml@main
+    with:
+      project_type: spm
+      working_directory: '.'
+      runner: macos-latest
+      xcode_version: 'TODO-pin-xcode'
+      coverage: true
+      upload_artifacts: true
+      org_config_sha: 'main'

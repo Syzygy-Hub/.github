@@ -1,0 +1,39 @@
+# Weekly drift check for the ecosystem feed and README version tables.
+# Reads the public raw syzygy.yml files of the 24 platform repos (no token). It never writes
+# and never commits. When drift is found, run check_drift.py --write locally and commit.
+
+name: Ecosystem drift
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ecosystem-drift-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  drift:
+    name: Check ecosystem feed drift
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Hub
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Check feed and README drift (raw URL mode)
+        run: python3 engineering/tooling/ecosystem-feed/check_drift.py --source raw
+
+      - name: Check canonical banner on required docs (read-only)
+        run: python3 engineering/tooling/banner-guard/check_banner.py

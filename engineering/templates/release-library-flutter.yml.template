@@ -1,0 +1,45 @@
+# Caller workflow: release for a Flutter or pure-Dart library (pub.dev). Copy to .github/workflows/release.yml.
+# Fires on strict bare-semver tags only. The Hub workflow validates the tag, syzygy.yml and pubspec.yaml
+# (exact match), extracts the CHANGELOG entry, publishes to pub.dev and creates the GitHub Release.
+# pub_auth (pub.dev OIDC) is documented in .github/workflows/README.md of Syzygy-Hub/.github.
+# This caller runs no CI gate; see the commented block at the end to opt in.
+name: Release
+
+on:
+  push:
+    tags:
+      - '[0-9]+.[0-9]+.[0-9]+'
+
+permissions: {}
+
+jobs:
+  release:
+    permissions:
+      contents: write
+      # id-token is used only when pub_auth == 'oidc' (pub.dev OIDC). It is inert with the default credentials.
+      id-token: write
+    uses: Syzygy-Hub/.github/.github/workflows/flutter-release.yml@main
+    # Passes PUB_CREDENTIALS (credentials mode) and the optional WEBSITE_DISPATCH_TOKEN.
+    secrets: inherit
+
+# Optional CI gate (opt-in, commented out). Adopt by replacing the active `jobs:` block above with
+# the block below. The gate calls ci-gate.yml, which checks that CI passed on the tagged commit
+# (ci_gate defaults to enforce in ci-gate.yml). `release` then waits for `gate`.
+#
+# jobs:
+#   gate:
+#     permissions:
+#       actions: read
+#       contents: read
+#     uses: Syzygy-Hub/.github/.github/workflows/ci-gate.yml@main
+#     with:
+#       sha: ${{ github.sha }}
+#       ci_workflow_name: ci.yml   # the caller's CI workflow file
+#
+#   release:
+#     needs: gate
+#     permissions:
+#       contents: write
+#       id-token: write
+#     uses: Syzygy-Hub/.github/.github/workflows/flutter-release.yml@main
+#     secrets: inherit

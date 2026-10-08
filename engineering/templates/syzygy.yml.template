@@ -1,14 +1,26 @@
-# Syzygy Repository Manifest
-# Copy this file to your repo root, rename it syzygy.yml, and fill in the values.
-# Schema: https://github.com/Syzygy-Hub/.github/blob/main/engineering/standards/repository-standard.md
+# Syzygy Repository Manifest (canonical schema, 3.0.0)
+# Copy to your repo root as syzygy.yml and fill in the values.
+# Schema: engineering/schema/syzygy.schema.json (validate with engineering/tooling/validate-syzygy/validate.py)
+# Keys: use `type` (not `layer`). Versions are bare semver with no v prefix and must equal the release tag.
 #
-# Flutter repos: do NOT set publish_to in pubspec.yaml — see flutter-pubspec-notes.md
+# Flutter repos: do NOT set publish_to in pubspec.yaml; see flutter-pubspec-notes.md
 
-name: syzygy-{type}-{platform}
-type: {ui|foundation|core|services|base}
+name: syzygy-{type}-{platform}          # e.g. syzygy-ui-ios
+type: {foundation|ui|core|services|ai|base|app|example}
 platform: {ios|android|rn|flutter}
 language: {swift|kotlin|typescript|dart}
 package_manager: {spm|jitpack|npm|pub.dev}
-license: MIT
-version: 1.0.0
-syzygy_foundation: ">=1.0.0"   # remove this line for foundation repos
+license: MIT                             # licence holder is a pending decision; see repository-standard.md
+version: 3.0.0                           # bare strict semver
+syzygy_foundation: ">=3.0.0"             # required for every type except foundation; remove that line for foundation repos
+description: "One sentence, no emoji"
+
+# Example-app variant (type: example). Uncomment and replace the active block above only for an
+# example app repo, syzygy-example-{platform}. Full rules: engineering/standards/example-apps-standard.md
+# type: example
+# demonstrates: [foundation, ui, core, services, ai, base]   # layers the example demonstrates
+# depends_on:                                                 # library repos and version constraints
+#   - name: syzygy-foundation-{platform}
+#     version_constraint: ">=3.0.0"
+#   - name: syzygy-ui-{platform}
+#     version_constraint: ">=3.0.0"

@@ -1,0 +1,23 @@
+# Caller workflow: CI for a React Native app (components, screens, JSX). Copy to .github/workflows/ci.yml.
+# Input names are the planned vocabulary; they are documented in .github/workflows/README.md
+# of Syzygy-Hub/.github.
+name: CI
+
+on:
+  push:
+    branches: ['**']
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/rn-ci.yml@main
+    with:
+      working_directory: '.'
+      runner: ubuntu-latest
+      node_version_from_engines: true   # reads engines.node from package.json
+      node_version: '22'               # fallback when engines.node is absent
+      eslint_config: '.eslintrc.json'
+      coverage: true
+      upload_artifacts: true
+      org_config_sha: 'main'

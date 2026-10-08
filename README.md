@@ -5,94 +5,82 @@
 
 # Syzygy Hub
 
-This repository is the Syzygy-Hub organisation infrastructure. It is the single source of truth for brand assets, engineering standards, README templates, reusable CI workflows, and lint tooling across every Syzygy repo.
+Shared infrastructure for the Syzygy ecosystem: reusable CI and release workflows, engineering standards, lint tooling, templates and the ecosystem feed.
 
----
+[![Version](https://img.shields.io/badge/version-3.0.0-2F6FED?style=flat)](profile/README.md)
+[![Platforms](https://img.shields.io/badge/platforms-iOS%20%C2%B7%20Android%20%C2%B7%20RN%20%C2%B7%20Flutter-2F6FED?style=flat)](profile/README.md)
+[![Repos](https://img.shields.io/badge/repos-25-2F6FED?style=flat)](https://github.com/orgs/Syzygy-Hub/repositories)
 
-## Org Profile — [`profile/`](profile/)
+## What is Syzygy
 
-[`profile/README.md`](profile/README.md) is the public-facing Syzygy-Hub GitHub organisation page — the page visitors see at [github.com/Syzygy-Hub](https://github.com/Syzygy-Hub).
+Syzygy is a set of layered libraries shared across four platforms: iOS (Swift), Android (Kotlin), React Native (TypeScript) and Flutter (Dart). Each layer has one job and depends only on the layers below it. The organisation has 25 repositories: 24 platform repositories (6 layers x 4 platforms) and this Hub.
 
----
+## Architecture at a glance
 
-## Brand — [`brand/`](brand/)
+```mermaid
+flowchart BT
+  Foundation --> Core --> Services --> AI --> UI
+  Foundation --> Services
+  Foundation --> UI
+  Core --> UI
+  Base[Base: composes all layers] -.-> Foundation
+  Base -.-> Core
+  Base -.-> Services
+  Base -.-> AI
+  Base -.-> UI
+```
 
-Logo, icon, banners, color palette, and typography guidelines.
+The full dependency rules are in [`engineering/architecture/syzygy-ecosystem.md`](engineering/architecture/syzygy-ecosystem.md). The per-platform version matrix is in [`profile/README.md`](profile/README.md#version-matrix) and generated from [`ecosystem/feed.json`](ecosystem/feed.json).
 
-- [`brand/`](brand/) — all asset files (SVG, PNG, WebP in all sizes)
-- [`brand/BRAND_GUIDE.md`](brand/BRAND_GUIDE.md) — usage rules, clear space, do/don't
+## What's in this repo
 
----
+| Path | Contents |
+|---|---|
+| [`.github/workflows/`](.github/workflows/) | Reusable CI, release and gate workflows, plus the drift and lint checks for this repo |
+| [`engineering/standards/`](engineering/standards/) | Canonical rules: repository, release, changelog, README, AI contract and example-app standards |
+| [`engineering/tooling/`](engineering/tooling/) | Lint configs (iOS, Android, RN, Dart and Flutter) and the `syzygy.yml` validator |
+| [`engineering/templates/`](engineering/templates/) | README, `syzygy.yml`, CI and release caller templates |
+| [`engineering/schema/`](engineering/schema/) | JSON Schemas for `syzygy.yml` and the ecosystem feed |
+| [`ecosystem/`](ecosystem/) | The generated ecosystem feed and the repo list it is built from |
+| [`brand/`](brand/) | Logo, icon, banners and the brand guide |
+| [`docs/`](docs/) | Pinning policy and the GitHub settings checklist |
 
-## Engineering Standards — [`engineering/standards/`](engineering/standards/)
+## Use the Hub workflows
 
-The canonical rules every Syzygy repo follows.
+Callers reference the workflows at `@main`. Copy a template from [`engineering/templates/`](engineering/templates/) and adjust the inputs. Minimal examples:
 
-- [`readme-standard.md`](engineering/standards/readme-standard.md) — the README rhythm, section order, badge format, voice rules
-- [`changelog-standard.md`](engineering/standards/changelog-standard.md) — Keep a Changelog format, entry style, unreleased section
-- [`release-standard.md`](engineering/standards/release-standard.md) — release trigger format, tag convention, pre-release checklist, multi-platform order
-- [`repository-standard.md`](engineering/standards/repository-standard.md) — naming convention, syzygy.yml manifest, branch and commit format
+```yaml
+# iOS library (Swift Package Manager)
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/ios-ci.yml@main
 
----
+# Android library (JDK 17 is required for library repos)
+jobs:
+  ci:
+    uses: Syzygy-Hub/.github/.github/workflows/android-ci.yml@main
+    with:
+      java_version: '17'
+```
 
-## Ecosystem Architecture — [`engineering/architecture/`](engineering/architecture/)
+Input reference, library and app recipes for every platform, and the release rules are in [`.github/workflows/README.md`](.github/workflows/README.md).
 
-The definitive description of how the Syzygy layers fit together.
+## Engineering standards
 
-- [`syzygy-ecosystem.md`](engineering/architecture/syzygy-ecosystem.md) — full layer diagram, dependency rules, what belongs (and doesn't) in each layer, platform support matrix
+- [`repository-standard.md`](engineering/standards/repository-standard.md): naming, the `syzygy.yml` manifest, branches and commits, lockfile policy
+- [`release-standard.md`](engineering/standards/release-standard.md): SemVer, strict tags, release gating and the no-publish app mode
+- [`changelog-standard.md`](engineering/standards/changelog-standard.md): Keep a Changelog format
+- [`readme-standard.md`](engineering/standards/readme-standard.md): README structure and voice
+- [`ai-contract-spec.md`](engineering/standards/ai-contract-spec.md): the AI contract shipped in v3.0.0
+- [`example-apps-standard.md`](engineering/standards/example-apps-standard.md): example app repositories
 
-Individual repo READMEs do not reproduce the ecosystem diagram. They link here.
+## Contributing, security and conduct
 
----
+- [Contributing](CONTRIBUTING.md)
+- [Security policy](SECURITY.md)
+- [Code of conduct](CODE_OF_CONDUCT.md)
+- Changes: [CHANGELOG.md](CHANGELOG.md)
 
-## README Templates — [`engineering/templates/`](engineering/templates/)
+## Licence
 
-Copy the appropriate template when creating a new Syzygy repo.
-
-- [`README-foundation.md`](engineering/templates/README-foundation.md) — for `syzygy-foundation-*`
-- [`README-ui.md`](engineering/templates/README-ui.md) — for `syzygy-ui-*`
-- [`README-core.md`](engineering/templates/README-core.md) — for `syzygy-core-*`
-- [`README-services.md`](engineering/templates/README-services.md) — for `syzygy-services-*`
-- [`README-base.md`](engineering/templates/README-base.md) — for `syzygy-base-*`
-- [`syzygy.yml.template`](engineering/templates/syzygy.yml.template) — the repo manifest template
-
----
-
-## Lint Tooling — [`engineering/tooling/`](engineering/tooling/)
-
-Canonical lint and analysis configs. Consuming repos store a local copy under `tooling/{platform}/` and CI fetches the canonical version fresh on each run.
-
-- [`engineering/tooling/ios/.swiftlint.yml`](engineering/tooling/ios/.swiftlint.yml)
-- [`engineering/tooling/android/.editorconfig`](engineering/tooling/android/.editorconfig)
-- [`engineering/tooling/rn/.eslintrc.json`](engineering/tooling/rn/.eslintrc.json) + [`.prettierrc`](engineering/tooling/rn/.prettierrc)
-- [`engineering/tooling/flutter/analysis_options.yaml`](engineering/tooling/flutter/analysis_options.yaml)
-
----
-
-## Developer Tools — [`engineering/hooks/`](engineering/hooks/)
-
-Shared developer tools that improve the local development workflow.
-
-- **Pre-push lint hook** — [`engineering/hooks/pre-push`](engineering/hooks/pre-push) — auto-detects repo platform, fetches canonical lint config, and runs linters before push. Blocks pushing on lint failure. See [`engineering/hooks/README.md`](engineering/hooks/README.md) for installation and usage.
-
----
-
-## Reusable CI Workflows — [`.github/workflows/`](.github/workflows/)
-
-Platform-specific GitHub Actions workflows called by individual repos via `workflow_call`.
-
-**CI workflows** (triggered by `workflow_call` from consuming repos):
-
-- [`ios-ci.yml`](.github/workflows/ios-ci.yml) — build, SwiftLint, test, optional coverage summary
-- [`android-ci.yml`](.github/workflows/android-ci.yml) — build, ktlint, test, optional JaCoCo coverage summary
-- [`rn-ci.yml`](.github/workflows/rn-ci.yml) — typecheck, lint, test, optional Jest coverage summary
-- [`flutter-ci.yml`](.github/workflows/flutter-ci.yml) — analyze (--fatal-warnings), test, optional lcov coverage summary
-
-**Release workflows** (triggered by tag push `[0-9]+.[0-9]+.[0-9]+` or `workflow_call`):
-
-- [`ios-release.yml`](.github/workflows/ios-release.yml) — validate version, extract CHANGELOG, create GitHub Release (SPM publishes via the tag automatically)
-- [`android-release.yml`](.github/workflows/android-release.yml) — validate version, extract CHANGELOG, create GitHub Release (JitPack auto-builds from the Release tag)
-- [`rn-release.yml`](.github/workflows/rn-release.yml) — validate version, extract CHANGELOG, publish to npm, create GitHub Release
-- [`flutter-release.yml`](.github/workflows/flutter-release.yml) — validate version, extract CHANGELOG, publish to pub.dev, create GitHub Release
-
-Coverage is informational only — no threshold enforcement. Results appear in the GitHub Actions job summary.
+TODO: licence holder is a pending decision. No licence is granted by this repository until the owner confirms the holder and licence text (see [`repository-standard.md`](engineering/standards/repository-standard.md)).

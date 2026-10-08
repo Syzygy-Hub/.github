@@ -1,0 +1,35 @@
+{
+  "schema": "syzygy-ecosystem-repos/1",
+  "owner": "Syzygy-Hub",
+  "ref": "main",
+  "hub": {
+    "repo": ".github",
+    "note": "The Hub has no syzygy.yml. Its version is not recorded in the feed."
+  },
+  "repos": [
+    { "layer": "foundation", "platform": "ios", "repo": "syzygy-foundation-ios", "path": "Foundation/ios/src/syzygy-foundation-ios" },
+    { "layer": "foundation", "platform": "android", "repo": "syzygy-foundation-android", "path": "Foundation/android/src/syzygy-foundation-android" },
+    { "layer": "foundation", "platform": "rn", "repo": "syzygy-foundation-rn", "path": "Foundation/rn/src/syzygy-foundation-rn" },
+    { "layer": "foundation", "platform": "flutter", "repo": "syzygy-foundation-flutter", "path": "Foundation/flutter/src/syzygy-foundation-flutter" },
+    { "layer": "ui", "platform": "ios", "repo": "syzygy-ui-ios", "path": "UI Libraries/ios/src/syzygy-ui-ios" },
+    { "layer": "ui", "platform": "android", "repo": "syzygy-ui-android", "path": "UI Libraries/android/src/syzygy-ui-android" },
+    { "layer": "ui", "platform": "rn", "repo": "syzygy-ui-rn", "path": "UI Libraries/rn/src/syzygy-ui-rn" },
+    { "layer": "ui", "platform": "flutter", "repo": "syzygy-ui-flutter", "path": "UI Libraries/flutter/src/syzygy-ui-flutter" },
+    { "layer": "core", "platform": "ios", "repo": "syzygy-core-ios", "path": "Core/ios/src/syzygy-core-ios" },
+    { "layer": "core", "platform": "android", "repo": "syzygy-core-android", "path": "Core/android/src/syzygy-core-android" },
+    { "layer": "core", "platform": "rn", "repo": "syzygy-core-rn", "path": "Core/rn/src/syzygy-core-rn" },
+    { "layer": "core", "platform": "flutter", "repo": "syzygy-core-flutter", "path": "Core/flutter/src/syzygy-core-flutter" },
+    { "layer": "services", "platform": "ios", "repo": "syzygy-services-ios", "path": "Services/ios/src/syzygy-services-ios" },
+    { "layer": "services", "platform": "android", "repo": "syzygy-services-android", "path": "Services/android/src/syzygy-services-android" },
+    { "layer": "services", "platform": "rn", "repo": "syzygy-services-rn", "path": "Services/rn/src/syzygy-services-rn" },
+    { "layer": "services", "platform": "flutter", "repo": "syzygy-services-flutter", "path": "Services/flutter/src/syzygy-services-flutter" },
+    { "layer": "ai", "platform": "ios", "repo": "syzygy-ai-ios", "path": "AI/ios/src/syzygy-ai-ios" },
+    { "layer": "ai", "platform": "android", "repo": "syzygy-ai-android", "path": "AI/android/src/syzygy-ai-android" },
+    { "layer": "ai", "platform": "rn", "repo": "syzygy-ai-rn", "path": "AI/rn/src/syzygy-ai-rn" },
+    { "layer": "ai", "platform": "flutter", "repo": "syzygy-ai-flutter", "path": "AI/flutter/src/syzygy-ai-flutter" },
+    { "layer": "base", "platform": "ios", "repo": "syzygy-base-ios", "path": "Base/ios/src/syzygy-base-ios" },
+    { "layer": "base", "platform": "android", "repo": "syzygy-base-android", "path": "Base/android/src/syzygy-base-android" },
+    { "layer": "base", "platform": "rn", "repo": "syzygy-base-rn", "path": "Base/rn/src/syzygy-base-rn" },
+    { "layer": "base", "platform": "flutter", "repo": "syzygy-base-flutter", "path": "Base/flutter/src/syzygy-base-flutter" }
+  ]
+}

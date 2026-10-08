@@ -1,0 +1,12 @@
+# CODEOWNERS for a Syzygy repo. Copy to .github/CODEOWNERS in each repo.
+# This file is per repo and is NOT inherited from the org.
+# Replace the TODO owner handle before use. Use a team handle once one exists.
+
+# Default owner for everything in the repo
+*                                   @TODO-owner-handle
+
+# Manifest, lint configs and CI workflows need explicit review
+syzygy.yml                          @TODO-owner-handle
+CHANGELOG.md                        @TODO-owner-handle
+tooling/                            @TODO-owner-handle
+.github/workflows/                  @TODO-owner-handle

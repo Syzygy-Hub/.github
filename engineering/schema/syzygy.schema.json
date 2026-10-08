@@ -1,0 +1,102 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/Syzygy-Hub/.github/blob/main/engineering/schema/syzygy.schema.json",
+  "title": "Syzygy repository manifest (syzygy.yml)",
+  "description": "Canonical schema for syzygy.yml across all Syzygy layers (foundation, ui, core, services, ai, base) and app/example repos. Legacy keys (layer, foundation, syzygy_<layer>) are accepted by the reference validator with a warning; see engineering/tooling/validate-syzygy/validate.py.",
+  "type": "object",
+  "required": ["name", "type", "platform", "language", "package_manager", "license", "version"],
+  "properties": {
+    "name": {
+      "type": "string",
+      "pattern": "^syzygy-(foundation|ui|core|services|ai|base|app|example)-(ios|android|rn|flutter)$",
+      "description": "Repository name, syzygy-{type}-{platform}."
+    },
+    "type": {
+      "type": "string",
+      "enum": ["foundation", "ui", "core", "services", "ai", "base", "app", "example"],
+      "description": "Layer or repo kind. Canonical key; replaces the legacy 'layer' key."
+    },
+    "platform": {
+      "type": "string",
+      "enum": ["ios", "android", "rn", "flutter"]
+    },
+    "language": {
+      "type": "string",
+      "enum": ["swift", "kotlin", "typescript", "dart"]
+    },
+    "package_manager": {
+      "type": "string",
+      "enum": ["spm", "jitpack", "npm", "pub.dev"]
+    },
+    "license": {
+      "type": "string",
+      "enum": ["MIT"],
+      "description": "SPDX identifier. The licence holder is a pending decision; see repository-standard.md."
+    },
+    "version": {
+      "type": "string",
+      "pattern": "^(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$",
+      "description": "Bare strict semver, no v prefix. Must equal the release tag."
+    },
+    "syzygy_foundation": {
+      "type": "string",
+      "description": "Version constraint on syzygy-foundation-*, for example \">=3.0.0\". Required for every type except foundation."
+    },
+    "description": {
+      "type": "string"
+    },
+    "contracts": {
+      "description": "Contracts provided by the repo (list of names, or name/version objects for base repos)."
+    },
+    "dependencies": {
+      "description": "Dependency constraints (list or mapping), used by repos that depend on several layers."
+    },
+    "demonstrates": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["foundation", "ui", "core", "services", "ai", "base"]
+      },
+      "description": "Example-only. Layers the example app demonstrates. See engineering/standards/example-apps-standard.md."
+    },
+    "depends_on": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["name", "version_constraint"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^syzygy-(foundation|ui|core|services|ai|base)-(ios|android|rn|flutter)$",
+            "description": "Library repository name."
+          },
+          "version_constraint": {
+            "type": "string",
+            "description": "Version range for the library, for example \">=3.0.0\". Bare semver operands, no v prefix."
+          }
+        }
+      },
+      "description": "Example-only. Library repositories the example consumes, with version constraints."
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "type": { "not": { "const": "foundation" } } } },
+      "then": { "required": ["syzygy_foundation"] }
+    },
+    {
+      "if": {
+        "properties": { "type": { "not": { "const": "example" } } },
+        "required": ["demonstrates"]
+      },
+      "then": { "not": {} }
+    },
+    {
+      "if": {
+        "properties": { "type": { "not": { "const": "example" } } },
+        "required": ["depends_on"]
+      },
+      "then": { "not": {} }
+    }
+  ]
+}

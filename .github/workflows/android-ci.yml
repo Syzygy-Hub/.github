@@ -1,5 +1,66 @@
 name: Android CI
 
+# ---------------------------------------------------------------------------
+# Reusable Android CI workflow (workflow_call only). Consumed as
+#   uses: Syzygy-Hub/.github/.github/workflows/android-ci.yml@main
+#
+# INPUT VOCABULARY
+# Common (shared across Hub CI workflows):
+#   working_directory     Directory, relative to repo root, containing gradlew.
+#                         Default '.'.
+#   runner                Runner label. Default 'ubuntu-latest'.
+#   org_config_sha        Ref of Syzygy-Hub/.github used to fetch tooling configs.
+#                         Default 'main'.
+#   coverage              Run jacocoTestReport and post a summary. Default true.
+#   upload_artifacts      Upload test reports as an artifact. Default true.
+# Android-specific:
+#   java_version          JDK for setup-java (temurin). Default '21'. Library repos
+#                         pass '17' explicitly. Must match the repo's jvmToolchain().
+#   project_type          'library' (build, test, ktlint, optional lint, optional
+#                         publishing check) or 'app' (assembleDebug, test, ktlint,
+#                         optional lint). Default 'library' (existing behaviour).
+#                         !! DEFAULT RISK FOR APPS: callers that OMIT project_type
+#                         get 'library' steps. On an application module this runs
+#                         `./gradlew build` (includes assembleRelease and check/lint)
+#                         instead of `assembleDebug`. It does not run publishing
+#                         checks (validate_publishing defaults false). An app caller
+#                         must set project_type: 'app' (and module, e.g. ':app').
+#                         The default is kept for backward compatibility.
+#                         Verified 2026-10: Base/android (com.android.application)
+#                         omits project_type and so runs the library path. Its
+#                         coverage is false, so no jacocoTestReport is required.
+#                         Setting coverage: true there would fail (no jacoco task).
+#   module                Gradle project path. ':' = root project (default). Otherwise
+#                         a path such as ':app' or ':feature:login'. Task names are
+#                         prefixed with it (e.g. ':app:assembleDebug').
+#   run_lint              Run the lint task. Default false (opt-in; enabling it on
+#                         existing repos may surface new failures).
+#   validate_publishing   library only: run publishToMavenLocal to validate the
+#                         publishing configuration. Default false.
+#   instrumented_tests    Opt-in job running connectedDebugAndroidTest on an emulator.
+#                         Default false. Requires a Linux runner with KVM.
+#   emulator_api_level    API level for the emulator job. Default 34.
+#   gradle_cache_read_only  Pass cache-read-only to setup-gradle. Default false.
+#                         Set true on non-default branches to avoid writing cache
+#                         entries that the default branch would not produce.
+#
+# TASK REQUIREMENTS IN THE CONSUMING REPO
+#   jacocoTestReport  must exist when coverage is true (add the jacoco plugin in
+#                     build.gradle.kts). A missing task fails the coverage step
+#                     with Gradle's "Task not found" error.
+#   publishToMavenLocal must exist when validate_publishing is true.
+#   lint              must exist when run_lint is true.
+#
+# EDITORCONFIG
+#   The org ktlint editorconfig is fetched to <repo root>/.editorconfig ONLY when
+#   the repo does not already have one. An existing .editorconfig is never
+#   overwritten.
+#
+# FAILURE POLICY
+#   No gradle, ktlint, lint or test failure is masked (no `|| true`, no
+#   continue-on-error). Only the final summary grep tolerates missing output.
+# ---------------------------------------------------------------------------
+
 on:
   workflow_call:
     inputs:
@@ -17,30 +78,117 @@ on:
         required: false
         type: boolean
         default: true
-        description: 'Whether to upload build/reports/tests/test as a build artifact. Set to false to opt out.'
+        description: 'Whether to upload test reports as a build artifact. Set to false to opt out.'
       org_config_sha:
         required: false
         type: string
         default: 'main'
         description: 'Ref of Syzygy-Hub/.github to fetch tooling configs from. Defaults to main.'
+      working_directory:
+        required: false
+        type: string
+        default: '.'
+        description: 'Directory (relative to repo root) containing gradlew.'
+      runner:
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+        description: 'GitHub runner label. Use a Linux runner for instrumented_tests.'
+      project_type:
+        required: false
+        type: string
+        default: 'library'
+        description: "'library' runs build/test/ktlint. 'app' runs assembleDebug/test/ktlint."
+      module:
+        required: false
+        type: string
+        default: ':'
+        description: "Gradle project path. ':' is the root project. Example: ':app'."
+      run_lint:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run the lint task.'
+      validate_publishing:
+        required: false
+        type: boolean
+        default: false
+        description: "library only: run publishToMavenLocal to validate publishing configuration."
+      instrumented_tests:
+        required: false
+        type: boolean
+        default: false
+        description: 'Whether to run connectedDebugAndroidTest on an emulator (separate job).'
+      emulator_api_level:
+        required: false
+        type: number
+        default: 34
+        description: 'Android API level for the emulator job.'
+      gradle_cache_read_only:
+        required: false
+        type: boolean
+        default: false
+        description: 'Pass cache-read-only to gradle/actions/setup-gradle.'
 
-# JaCoCo note (judgment call 3):
-# The `jacocoTestReport` task must exist in the consuming repo's build.gradle.kts.
-# This workflow cannot add the JaCoCo plugin — it can only invoke tasks that
-# already exist. Consuming repos must add:
-#
-#   plugins { id("jacoco") }
-#   tasks.jacocoTestReport { ... }
-#
-# to their build.gradle.kts before coverage reporting will work.
-# If the task does not exist, the coverage step will fail gracefully with a
-# Gradle "task not found" error, not a silent pass.
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Superseded runs are cancelled on every ref except the default branch.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 45
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+    env:
+      PROJECT_TYPE: ${{ inputs.project_type }}
+      MODULE: ${{ inputs.module }}
+      RUN_LINT: ${{ inputs.run_lint }}
+      VALIDATE_PUBLISHING: ${{ inputs.validate_publishing }}
+      COVERAGE: ${{ inputs.coverage }}
+      ORG_CONFIG_SHA: ${{ inputs.org_config_sha }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Validate inputs and resolve task paths
+        id: paths
+        run: |
+          set -eu
+          case "$PROJECT_TYPE" in
+            library|app) ;;
+            *)
+              echo "::error::Unknown project_type '$PROJECT_TYPE' (expected 'library' or 'app')"
+              exit 1
+              ;;
+          esac
+          if [ "$PROJECT_TYPE" = "app" ] && [ "$VALIDATE_PUBLISHING" = "true" ]; then
+            echo "::error::validate_publishing applies to project_type 'library' only"
+            exit 1
+          fi
+          case "$MODULE" in
+            :)
+              PREFIX=""
+              MODDIR=""
+              ;;
+            :*)
+              PREFIX="${MODULE}:"
+              MODDIR="$(echo "${MODULE#:}" | tr ':' '/')/"
+              ;;
+            *)
+              echo "::error::module must be ':' or start with ':' (got '$MODULE')"
+              exit 1
+              ;;
+          esac
+          echo "Task prefix: '${PREFIX}'  module dir: '${MODDIR}'"
+          {
+            echo "prefix=${PREFIX}"
+            echo "module_dir=${MODDIR}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Set up JDK
         uses: actions/setup-java@v4
@@ -48,40 +196,146 @@ jobs:
           java-version: ${{ inputs.java_version }}
           distribution: 'temurin'
 
-      - uses: gradle/actions/setup-gradle@v4
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ inputs.gradle_cache_read_only }}
 
-      - name: Fetch ktlint config
+      - name: Fetch ktlint config (only if repo has no .editorconfig)
         run: |
-          curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/android/.editorconfig" \
-            -o .editorconfig
+          set -eu
+          if [ -f "$GITHUB_WORKSPACE/.editorconfig" ]; then
+            echo "Repo has .editorconfig; keeping it."
+          else
+            curl -fsSL \
+              "https://raw.githubusercontent.com/Syzygy-Hub/.github/${ORG_CONFIG_SHA}/engineering/tooling/android/.editorconfig" \
+              -o "$GITHUB_WORKSPACE/.editorconfig"
+          fi
 
-      - name: Build
-        run: ./gradlew build
+      - name: Build (library)
+        if: ${{ inputs.project_type == 'library' }}
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}build"
+
+      - name: Assemble debug (app)
+        if: ${{ inputs.project_type == 'app' }}
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}assembleDebug"
 
       - name: ktlint check
-        run: ./gradlew ktlintCheck
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}ktlintCheck"
 
       - name: Test
-        run: ./gradlew test
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}test"
+
+      - name: Lint
+        if: ${{ inputs.run_lint }}
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}lint"
+
+      - name: Validate publishing configuration (library)
+        if: ${{ inputs.project_type == 'library' && inputs.validate_publishing }}
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+        run: ./gradlew "${TASK_PREFIX}publishToMavenLocal"
 
       - name: Upload test results
-        if: always() && inputs.upload_artifacts
+        if: ${{ always() && inputs.upload_artifacts }}
         uses: actions/upload-artifact@v4
         with:
           name: test-results
-          path: build/reports/tests/test
+          path: ${{ inputs.working_directory }}/${{ steps.paths.outputs.module_dir }}build/reports/tests/test
           if-no-files-found: warn
 
       - name: Coverage report
         if: ${{ inputs.coverage }}
+        env:
+          TASK_PREFIX: ${{ steps.paths.outputs.prefix }}
+          MODDIR: ${{ steps.paths.outputs.module_dir }}
         run: |
-          ./gradlew jacocoTestReport
-          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
-          echo "Coverage report generated at \`app/build/reports/jacoco/\`" >> "$GITHUB_STEP_SUMMARY"
-          # Print line coverage summary if the XML report exists
-          REPORT=$(find . -name "jacocoTestReport.xml" | head -1)
+          set -eu
+          # Fails clearly ("Task 'jacocoTestReport' not found") if the repo lacks the task.
+          ./gradlew "${TASK_PREFIX}jacocoTestReport"
+          {
+            echo "## Coverage Report"
+            echo ""
+            echo "Coverage report generated at \`${MODDIR}build/reports/jacoco/\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Summary extraction is tolerant: missing XML or counters only omit the line.
+          REPORT=$(find "${MODDIR:-.}" -path '*/build/reports/*' -name jacocoTestReport.xml 2>/dev/null | head -1)
           if [ -n "$REPORT" ]; then
-            echo "" >> "$GITHUB_STEP_SUMMARY"
-            grep -o 'type="LINE"[^/]*/>' "$REPORT" | head -1 >> "$GITHUB_STEP_SUMMARY" || true
+            # Report-level counters are the last LINE counter in the XML.
+            LINE=$(grep -o 'type="LINE"[^/]*/>' "$REPORT" | tail -n 1)
+            if [ -n "$LINE" ]; then
+              echo "" >> "$GITHUB_STEP_SUMMARY"
+              echo "$LINE" >> "$GITHUB_STEP_SUMMARY"
+            fi
           fi
+
+  instrumented-tests:
+    if: ${{ inputs.instrumented_tests }}
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+    env:
+      MODULE: ${{ inputs.module }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Resolve task paths
+        id: paths
+        run: |
+          set -eu
+          case "$MODULE" in
+            :) PREFIX=""; MODDIR="" ;;
+            :*) PREFIX="${MODULE}:"; MODDIR="$(echo "${MODULE#:}" | tr ':' '/')/" ;;
+            *) echo "::error::module must be ':' or start with ':' (got '$MODULE')"; exit 1 ;;
+          esac
+          {
+            echo "prefix=${PREFIX}"
+            echo "module_dir=${MODDIR}"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          java-version: ${{ inputs.java_version }}
+          distribution: 'temurin'
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          cache-read-only: ${{ inputs.gradle_cache_read_only }}
+
+      - name: Enable KVM for emulator
+        if: ${{ runner.os == 'Linux' }}
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Run instrumented tests on emulator
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: ${{ inputs.emulator_api_level }}
+          arch: x86_64
+          target: default
+          working-directory: ${{ inputs.working_directory }}
+          script: ./gradlew "${{ steps.paths.outputs.prefix }}connectedDebugAndroidTest"
+
+      - name: Upload instrumented test results
+        if: ${{ always() && inputs.upload_artifacts }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: instrumented-test-results
+          path: ${{ inputs.working_directory }}/${{ steps.paths.outputs.module_dir }}build/reports/androidTests/connected
+          if-no-files-found: warn

@@ -1,0 +1,9 @@
+# Dependabot for the Hub repo itself.
+# Note: merging a Dependabot PR that changes a reusable workflow in this Hub goes live for all
+# 24 platform repos immediately, because they call @main. Review each action bump carefully.
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

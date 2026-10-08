@@ -1,0 +1,44 @@
+# Dependabot configuration for a Syzygy repo. Copy to .github/dependabot.yml in each repo.
+# This file is per repo and is NOT inherited from the org.
+# Keep only the ecosystems the repo uses. Remove the entries that do not apply.
+version: 2
+updates:
+  # GitHub Actions versions used by the caller and release workflows
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+
+  # RN repos (npm). Library lock file is package-lock.json (committed); see repository-standard.md
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+
+  # SwiftPM repos. Libraries do not commit Package.resolved, so dependency bumps are version-range only
+  - package-ecosystem: "swift"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+
+  # Gradle repos (Android)
+  - package-ecosystem: "gradle"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"
+
+  # Flutter / pure-Dart repos
+  - package-ecosystem: "pub"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    commit-message:
+      prefix: "chore"

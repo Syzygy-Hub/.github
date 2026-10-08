@@ -12,7 +12,12 @@ on:
         required: false
         type: string
         default: '22'
-        description: "Node.js version to use."
+        description: 'Node.js major version to use (ignored when node_version_from_engines is true and package.json declares engines.node).'
+      node_version_from_engines:
+        required: false
+        type: boolean
+        default: false
+        description: 'When true, read the major version from package.json engines.node (app repos). Falls back to node_version if not set.'
       eslint_config:
         required: false
         type: string
@@ -31,54 +36,321 @@ on:
         type: string
         default: 'main'
         description: 'Ref of Syzygy-Hub/.github to fetch tooling configs from. Defaults to main.'
+      working_directory:
+        required: false
+        type: string
+        default: '.'
+        description: 'Directory containing package.json, relative to the repository root.'
+      runner:
+        required: false
+        type: string
+        default: 'ubuntu-latest'
+        description: 'Runner label for the library checks and the Android smoke build.'
+      native_smoke_android:
+        required: false
+        type: boolean
+        default: false
+        description: 'Opt-in: run `./gradlew assembleDebug` in <working_directory>/android.'
+      native_java_version:
+        required: false
+        type: string
+        default: '17'
+        description: 'JDK version for the Android smoke build (17 or 21).'
+      native_smoke_ios:
+        required: false
+        type: boolean
+        default: false
+        description: 'Opt-in: run pod install and an iphonesimulator xcodebuild in <working_directory>/ios (macos-latest).'
+      native_ios_scheme:
+        required: false
+        type: string
+        default: ''
+        description: 'Xcode scheme to build. Required when native_smoke_ios is true.'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  # Superseded runs are cancelled on every ref except the default branch.
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 jobs:
-  build-and-test:
-    runs-on: ubuntu-latest
+  resolve:
+    name: resolve-node-version
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 5
+    outputs:
+      node-version: ${{ steps.node.outputs.version }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up Node
+      - name: Resolve Node version
+        id: node
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          FROM_ENGINES: ${{ inputs.node_version_from_engines }}
+          DEFAULT_NODE: ${{ inputs.node_version }}
+        run: |
+          set -euo pipefail
+          VERSION="$DEFAULT_NODE"
+          if [ "$FROM_ENGINES" = "true" ]; then
+            VERSION=$(python3 -c '
+          import json, re, sys
+          with open("package.json") as f:
+              engines = json.load(f).get("engines") or {}
+          spec = engines.get("node", "") or ""
+          # Minimum supported major: for each "||" alternative take its lower bound
+          # (the number in a ">=X" clause if present, else the first number), then
+          # take the smallest. E.g. "^22.13.0 || ^24.3.0 || >= 26.0.0" -> 22,
+          # "<=22 >=20" -> 20, ">= 22.11.0" -> 22.
+          mins = []
+          for alt in spec.split("||"):
+              m = re.search(r">=\s*v?(\d+)", alt) or re.search(r"\d+", alt)
+              if m:
+                  mins.append(int(m.group(1) if m.re.groups else m.group(0)))
+          if not mins:
+              sys.exit("no engines.node in package.json")
+          print(min(mins))
+          ') || { echo "::error::node_version_from_engines is true but package.json has no usable engines.node"; exit 1; }
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "Node major version: $VERSION" >> "$GITHUB_STEP_SUMMARY"
+
+  build-and-test:
+    name: build-and-test
+    needs: resolve
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Detect npm lockfile
+        id: lock
+        shell: bash
+        env:
+          WORKING_DIRECTORY: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          if [ -f "$WORKING_DIRECTORY/package-lock.json" ]; then
+            echo "has_lock=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "has_lock=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # actions/setup-node@v4 errors when cache: npm is requested and the
+      # cache-dependency-path matches no file, so the npm cache is enabled only
+      # when a lockfile exists. Two mutually exclusive steps keep it valid.
+      - name: Set up Node (npm cache)
+        if: ${{ steps.lock.outputs.has_lock == 'true' }}
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ inputs.node_version }}
+          node-version: ${{ needs.resolve.outputs.node-version }}
+          cache: npm
+          cache-dependency-path: ${{ inputs.working_directory }}/package-lock.json
+
+      - name: Set up Node (no cache, no lockfile)
+        if: ${{ steps.lock.outputs.has_lock != 'true' }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.resolve.outputs.node-version }}
+
+      - name: Verify required npm scripts
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          missing=""
+          for s in typecheck lint test; do
+            if ! node -e 'const p=require("./package.json"); process.exit(p.scripts && p.scripts[process.argv[1]] ? 0 : 1)' "$s"; then
+              missing="$missing $s"
+            fi
+          done
+          if [ -n "$missing" ]; then
+            echo "::error::package.json is missing required npm script(s):$missing (required: typecheck, lint, test)"
+            exit 1
+          fi
 
       - name: Fetch ESLint and Prettier configs
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        env:
+          ORG_SHA: ${{ inputs.org_config_sha }}
+          ESLINT_CONFIG: ${{ inputs.eslint_config }}
         run: |
+          set -euo pipefail
+          # Remove local eslintrc.js/.cjs first: they take precedence over the fetched .json.
+          # Runner checkout only; repo files are not modified.
+          rm -f .eslintrc.js .eslintrc.cjs
           curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/rn/${{ inputs.eslint_config }}" \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${ORG_SHA}/engineering/tooling/rn/${ESLINT_CONFIG}" \
             -o .eslintrc.json
           curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/rn/.prettierrc" \
+            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${ORG_SHA}/engineering/tooling/rn/.prettierrc" \
             -o .prettierrc
-          # Remove any local eslintrc.js that would take precedence over the fetched .json
-          rm -f .eslintrc.js .eslintrc.cjs
 
       - name: Install dependencies
-        run: npm install
+        id: install
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then
+            npm ci
+            echo "mode=npm ci (package-lock.json)" >> "$GITHUB_OUTPUT"
+          else
+            echo "::warning title=No lockfile::package-lock.json not found; using npm install (not reproducible)"
+            echo "> :warning: No package-lock.json found. Dependencies were installed with \`npm install\` and are not reproducible." >> "$GITHUB_STEP_SUMMARY"
+            npm install
+            echo "mode=npm install (no lockfile)" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Typecheck
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: npm run typecheck
 
       - name: Lint
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: npm run lint
 
       - name: Test with coverage
         if: ${{ inputs.coverage }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: |
+          # Capture npm's exit code (not tee's) so failing tests fail the job.
+          set +e
           npm test -- --coverage --coverageReporters=text-summary 2>&1 | tee coverage-output.txt
-          echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
-          grep -A 20 "Coverage summary" coverage-output.txt >> "$GITHUB_STEP_SUMMARY" \
-            || echo "No coverage summary found — ensure Jest is configured with coverage reporters." >> "$GITHUB_STEP_SUMMARY"
+          status=${PIPESTATUS[0]}
+          set -e
+          {
+            echo "## Coverage Report"
+            if grep -q "Coverage summary" coverage-output.txt; then
+              grep -A 20 "Coverage summary" coverage-output.txt
+            else
+              echo "No coverage summary found. Ensure Jest is configured with a text-summary reporter."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+          exit "$status"
 
       - name: Test without coverage
         if: ${{ !inputs.coverage }}
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
         run: npm test
 
       - name: Upload coverage
-        if: always() && inputs.upload_artifacts
+        if: always() && inputs.coverage && inputs.upload_artifacts
         uses: actions/upload-artifact@v4
         with:
           name: coverage
-          path: coverage/
+          path: ${{ inputs.working_directory }}/coverage/
           if-no-files-found: warn
+
+      - name: Job summary
+        if: always()
+        shell: bash
+        env:
+          INSTALL_MODE: ${{ steps.install.outputs.mode }}
+        run: |
+          {
+            echo "## RN build-and-test"
+            echo "- Working directory: \`${{ inputs.working_directory }}\`"
+            echo "- Node: \`${{ needs.resolve.outputs.node-version }}\`"
+            echo "- Install: ${INSTALL_MODE:-not completed}"
+            echo "- ESLint config: \`${{ inputs.eslint_config }}\` @ \`${{ inputs.org_config_sha }}\`"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+  native-smoke-android:
+    name: native-smoke-android
+    if: ${{ inputs.native_smoke_android }}
+    needs: resolve
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.native_java_version }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.resolve.outputs.node-version }}
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Assemble debug APK
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}/android
+        run: |
+          set -euo pipefail
+          test -f gradlew || { echo "::error::android/gradlew not found in ${{ inputs.working_directory }}"; exit 1; }
+          chmod +x gradlew
+          ./gradlew assembleDebug
+
+  native-smoke-ios:
+    name: native-smoke-ios
+    if: ${{ inputs.native_smoke_ios }}
+    needs: resolve
+    runs-on: macos-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate scheme input
+        shell: bash
+        env:
+          SCHEME: ${{ inputs.native_ios_scheme }}
+        run: |
+          if [ -z "$SCHEME" ]; then
+            echo "::error::native_ios_scheme must be set when native_smoke_ios is true"
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ needs.resolve.outputs.node-version }}
+
+      - name: Install dependencies
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}
+        run: |
+          set -euo pipefail
+          if [ -f package-lock.json ]; then npm ci; else npm install; fi
+
+      - name: Pod install
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}/ios
+        run: |
+          set -euo pipefail
+          test -d . || { echo "::error::ios/ directory not found"; exit 1; }
+          pod install
+
+      - name: Build for iphonesimulator
+        shell: bash
+        working-directory: ${{ inputs.working_directory }}/ios
+        env:
+          SCHEME: ${{ inputs.native_ios_scheme }}
+        run: |
+          set -euo pipefail
+          shopt -s nullglob
+          WS=(*.xcworkspace)
+          if [ "${#WS[@]}" -eq 0 ]; then
+            echo "::error::no .xcworkspace found in ios/ (run pod install first)"
+            exit 1
+          fi
+          xcodebuild -workspace "${WS[0]}" -scheme "$SCHEME" -configuration Debug \
+            -sdk iphonesimulator CODE_SIGNING_ALLOWED=NO build

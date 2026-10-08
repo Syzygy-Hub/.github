@@ -8,6 +8,7 @@
 # ones that catch real bugs or meaningfully improve consistency without
 # being noisy on typical SwiftUI code.
 opt_in_rules:
+  - force_unwrapping         # opt-in rule; enabled so the `force_unwrapping: warning` setting below takes effect
   - empty_count              # prefer `.isEmpty` over `.count == 0` — clearer and avoids O(n) count on some collections
   - closure_spacing           # consistent `{ }` spacing around closures
   - explicit_init             # avoid redundant `.init(...)` when the type can be inferred another way

@@ -1,5 +1,92 @@
 name: iOS CI
 
+# ---------------------------------------------------------------------------
+# Reusable iOS CI workflow (workflow_call only). Consumed as
+#   uses: Syzygy-Hub/.github/.github/workflows/ios-ci.yml@main
+#
+# INPUT VOCABULARY
+# Common (shared across Hub CI workflows):
+#   working_directory    Directory, relative to repo root, containing Package.swift
+#                        or the Xcode project. Default '.'.
+#   runner               Runner label. Default 'macos-latest'.
+#   org_config_sha       Ref of Syzygy-Hub/.github used to fetch tooling configs.
+#                        Default 'main'.
+#   coverage             Generate a coverage report in the job summary. Default true.
+#   upload_artifacts     Upload <working_directory>/.build/reports/ as an artifact.
+#                        Default true.
+# iOS-specific:
+#   project_type         'spm' (swift build / swift test) or 'xcode' (xcodebuild).
+#                        Default 'spm' (existing behaviour).
+#   xcode_project        .xcodeproj path, relative to working_directory. For 'xcode'.
+#   xcode_workspace      .xcworkspace path, relative to working_directory. For 'xcode'.
+#                        Set exactly one of xcode_project / xcode_workspace.
+#   scheme               Xcode scheme. Required for 'xcode'.
+#   xcode_version        Xcode major.minor (e.g. '16.2'). Empty = runner default. When set,
+#                        the step selects /Applications/Xcode_<version>.app via
+#                        xcode-select and verifies it with `xcodebuild -version`.
+#                        Fails if that Xcode is not installed on the runner image.
+#   ios_simulator_device Simulator device name. Default '' = auto. 'xcode' only.
+#   ios_simulator_os     Simulator iOS version. Default '' = auto. 'xcode' only.
+#                        Source: `xcrun simctl list -j runtimes devices available`.
+#                        Auto (both empty): the newest AVAILABLE iOS runtime (numeric
+#                        version order; isAvailable=false ignored) that has a ranked
+#                        iPhone, then the newest iPhone on it. Ranking: generation
+#                        number, then Pro Max > Pro > Plus > base. Only names matching
+#                        `iPhone <N>`, `iPhone <N> Plus`, `iPhone <N> Pro`, or
+#                        `iPhone <N> Pro Max` are ranked. Other names (for example
+#                        "iPhone Air" and the "e" variants such as "iPhone 17e") are
+#                        skipped, so they are never auto-picked. A newer runtime with
+#                        no ranked iPhone is skipped with a ::warning:: and the skip is
+#                        listed in the job summary. There is no other fallback.
+#                        Override device only: the newest runtime that has that exact
+#                        device name. Override OS only: the newest ranked iPhone on
+#                        that exact OS (no fallback to another OS). Both set: exact match.
+#                        Explicit values must be installed on the runner image.
+#                        The resolved destination is printed in the job summary.
+#                        The job fails (::error::, exit 1) if nothing matches.
+#   xcodebuild_extra_args  Extra arguments appended to the xcodebuild build and test
+#                        commands (project_type 'xcode' only). Default ''. Split on
+#                        whitespace only (read -ra): no shell quoting, no globbing, no
+#                        eval. Example for syzygy-base-ios (a comment only; that
+#                        project is not changed here):
+#                          xcodebuild_extra_args: '-skipPackagePluginValidation'
+#   swiftlint_version    SwiftLint release, downloaded from GitHub Releases
+#                        (portable_swiftlint.zip). Default '0.59.1'. The download URL
+#                        embeds the version tag, and the installed binary's
+#                        `swiftlint version` must equal this value. The release
+#                        publishes no checksum asset, so the pin is by version only.
+#
+# HIGH DEPLOYMENT TARGETS
+#   Projects whose deployment target is newer than the default runner image's SDK
+#   and simulator runtimes need both `runner` and `xcode_version` set. Example:
+#   syzygy-base-ios deploys to iOS 26.5, so it needs an image that ships an iOS 26.x
+#   SDK and simulator runtime. Illustrative caller inputs (NOT applied to any repo
+#   here; the Base iOS project is unchanged):
+#     with:
+#       project_type: xcode
+#       xcode_workspace: <App>.xcworkspace    # or xcode_project
+#       scheme: <Scheme>
+#       runner: macos-26          # example label. Confirm it is offered on
+#                                 # GitHub-hosted runners before use.
+#       xcode_version: '26.0'     # example. Confirm /Applications/Xcode_26.0.app
+#                                 # exists on that image, or leave it empty.
+#     # ios_simulator_device / ios_simulator_os: leave empty to auto-detect.
+#
+# SWIFTLINT CONFIG
+#   spm:   the org config is fetched to ./.swiftlint.yml (overwritten each run,
+#          as before). Its included paths assume Sources/ and Tests/.
+#   xcode: the org config is fetched only when the repo has no .swiftlint.yml.
+#          App layouts should copy the org config to the repo root and adapt its
+#          included paths to the app's source folders.
+#
+# FAILURE POLICY
+#   No step masks build, lint or test failures (no `|| true`, no
+#   continue-on-error, no xcpretty pipes). The only tolerant steps are the
+#   coverage and summary reports; they emit ::warning:: annotations instead of
+#   failing, and run only after the test step has passed (or, for the summary,
+#   always, without changing the test step's exit status).
+# ---------------------------------------------------------------------------
+
 on:
   workflow_call:
     inputs:
@@ -12,80 +99,477 @@ on:
         required: false
         type: boolean
         default: true
-        description: 'Whether to upload build/reports/ as a build artifact. Set to false to opt out.'
+        description: 'Whether to upload <working_directory>/.build/reports/ as a build artifact. Set to false to opt out.'
       org_config_sha:
         required: false
         type: string
         default: 'main'
         description: 'Ref of Syzygy-Hub/.github to fetch tooling configs from. Defaults to main.'
+      working_directory:
+        required: false
+        type: string
+        default: '.'
+        description: 'Directory (relative to repo root) containing Package.swift or the Xcode project.'
+      runner:
+        required: false
+        type: string
+        default: 'macos-latest'
+        description: 'GitHub runner label. Must be a macOS runner.'
+      project_type:
+        required: false
+        type: string
+        default: 'spm'
+        description: "'spm' runs swift build / swift test. 'xcode' runs xcodebuild against xcode_project or xcode_workspace."
+      xcode_project:
+        required: false
+        type: string
+        default: ''
+        description: "Path to the .xcodeproj, relative to working_directory (project_type 'xcode'). Set this or xcode_workspace, not both."
+      xcode_workspace:
+        required: false
+        type: string
+        default: ''
+        description: "Path to the .xcworkspace, relative to working_directory (project_type 'xcode'). Set this or xcode_project, not both."
+      scheme:
+        required: false
+        type: string
+        default: ''
+        description: "Xcode scheme to build and test (required when project_type is 'xcode')."
+      xcode_version:
+        required: false
+        type: string
+        default: ''
+        description: "Xcode major.minor to select, e.g. '16.2'. Empty keeps the runner default. Must be installed at /Applications/Xcode_<version>.app."
+      ios_simulator_device:
+        required: false
+        type: string
+        default: ''
+        description: "Simulator device name (project_type 'xcode'). Empty = auto-detect the newest iPhone on the newest iOS runtime."
+      ios_simulator_os:
+        required: false
+        type: string
+        default: ''
+        description: "Simulator iOS version (project_type 'xcode'). Empty = auto-detect the newest iOS runtime. Must be installed on the runner image."
+      xcodebuild_extra_args:
+        required: false
+        type: string
+        default: ''
+        description: "Extra xcodebuild arguments for the build and test commands (project_type 'xcode'). Whitespace-split, no quoting. Example: '-skipPackagePluginValidation'."
+      swiftlint_version:
+        required: false
+        type: string
+        default: '0.59.1'
+        description: 'SwiftLint version to install from GitHub Releases.'
 
-# Coverage note (judgment call 2):
-# The test binary path varies by package name and number of targets.
-# We use `find .build -name "*.profdata"` to locate profdata dynamically
-# rather than hardcoding a path, which handles packages with multiple
-# test targets gracefully.
+permissions:
+  contents: read
+
+concurrency:
+  # Superseded runs are cancelled on every ref except the default branch.
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != format('refs/heads/{0}', github.event.repository.default_branch) }}
 
 jobs:
   build-and-test:
-    runs-on: macos-latest
+    runs-on: ${{ inputs.runner }}
+    timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: ${{ inputs.working_directory }}
+    env:
+      PROJECT_TYPE: ${{ inputs.project_type }}
+      XC_PROJECT: ${{ inputs.xcode_project }}
+      XC_WORKSPACE: ${{ inputs.xcode_workspace }}
+      XC_SCHEME: ${{ inputs.scheme }}
+      XCODE_VERSION: ${{ inputs.xcode_version }}
+      SIM_DEVICE: ${{ inputs.ios_simulator_device }}
+      SIM_OS: ${{ inputs.ios_simulator_os }}
+      XC_EXTRA_ARGS: ${{ inputs.xcodebuild_extra_args }}
+      SWIFTLINT_VERSION: ${{ inputs.swiftlint_version }}
+      ORG_CONFIG_SHA: ${{ inputs.org_config_sha }}
+      COVERAGE: ${{ inputs.coverage }}
     steps:
       - uses: actions/checkout@v4
 
+      - name: Validate inputs
+        run: |
+          set -eu
+          case "$PROJECT_TYPE" in
+            spm)
+              if [ ! -f Package.swift ]; then
+                echo "::error::project_type is 'spm' but no Package.swift in $(pwd)"
+                exit 1
+              fi
+              ;;
+            xcode)
+              if [ -z "$XC_SCHEME" ]; then
+                echo "::error::project_type 'xcode' requires the 'scheme' input"
+                exit 1
+              fi
+              if [ -n "$XC_WORKSPACE" ] && [ -n "$XC_PROJECT" ]; then
+                echo "::error::set only one of xcode_workspace or xcode_project"
+                exit 1
+              fi
+              if [ -z "$XC_WORKSPACE" ] && [ -z "$XC_PROJECT" ]; then
+                echo "::error::project_type 'xcode' requires xcode_workspace or xcode_project"
+                exit 1
+              fi
+              ;;
+            *)
+              echo "::error::Unknown project_type '$PROJECT_TYPE' (expected 'spm' or 'xcode')"
+              exit 1
+              ;;
+          esac
+
+      - name: Select Xcode
+        if: ${{ inputs.xcode_version != '' }}
+        run: |
+          set -eu
+          XC_APP="/Applications/Xcode_${XCODE_VERSION}.app"
+          if [ ! -d "$XC_APP/Contents/Developer" ]; then
+            echo "::error::xcode_version '${XCODE_VERSION}' not found at $XC_APP on this runner image. Choose a runner that ships it, or leave xcode_version empty."
+            exit 1
+          fi
+          sudo xcode-select -s "$XC_APP/Contents/Developer"
+          ACTUAL=$(xcodebuild -version | head -n 1)
+          case "$ACTUAL" in
+            "Xcode ${XCODE_VERSION}"|"Xcode ${XCODE_VERSION}."*) ;;
+            *)
+              echo "::error::Selected Xcode reports '$ACTUAL', expected Xcode ${XCODE_VERSION}."
+              exit 1
+              ;;
+          esac
+
+      - name: Toolchain info
+        run: |
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve simulator destination
+        if: ${{ inputs.project_type == 'xcode' }}
+        run: |
+          set -eu
+          mkdir -p "$RUNNER_TEMP/simctl"
+          SIM_JSON="$RUNNER_TEMP/simctl/runtimes-and-devices.json"
+          SIM_RESOLVED="$RUNNER_TEMP/simctl/resolved.txt"
+          # One command gives both runtimes and devices. (`devices available -j` alone
+          # has no runtimes key, so runtime selection would find nothing.)
+          xcrun simctl list -j runtimes devices available > "$SIM_JSON"
+          # Resolution rules are documented in the header (ios_simulator_os). Summary:
+          #   auto: newest available iOS runtime (numeric order) with a ranked iPhone;
+          #   ranking = generation, then Pro Max > Pro > Plus > base; others skipped.
+          #   device-only override: newest runtime carrying that exact device name.
+          #   os-only override: newest ranked iPhone on that exact runtime.
+          # Writes 3 lines to $SIM_RESOLVED: name, version, skipped runtimes (comma list).
+          # Exits 1 with ::error:: when nothing matches. No fallback beyond the rules.
+          python3 - "$SIM_JSON" "$SIM_RESOLVED" <<'PY'
+          import json, os, re, sys
+
+          src, out = sys.argv[1], sys.argv[2]
+          data = json.load(open(src))
+          want_dev = os.environ.get("SIM_DEVICE", "").strip()
+          want_os = os.environ.get("SIM_OS", "").strip()
+
+          PHONE = re.compile(r"^iPhone (\d+)(?: (Plus|Pro Max|Pro))?$")
+          TAIL_RANK = {None: 0, "Plus": 1, "Pro": 2, "Pro Max": 3}
+          VERSION = re.compile(r"^\d+(\.\d+)*$")
+
+          def vkey(v):
+              return tuple(int(p) for p in v.split("."))
+
+          def phone_key(name):
+              m = PHONE.match(name)
+              if not m:
+                  return None
+              return (int(m.group(1)), TAIL_RANK[m.group(2)])
+
+          def fail(msg):
+              print(f"::error::{msg}")
+              sys.exit(1)
+
+          runtimes = []
+          for rt in data.get("runtimes", []):
+              if rt.get("platform") != "iOS" or rt.get("isAvailable") is not True:
+                  continue
+              ver = rt.get("version", "")
+              if not VERSION.match(ver):
+                  print(f"::warning::Ignoring iOS runtime with unparseable version '{ver}'.")
+                  continue
+              runtimes.append(rt)
+          runtimes.sort(key=lambda r: vkey(r["version"]), reverse=True)
+          if not runtimes:
+              fail("No available iOS simulator runtime in simctl output.")
+          if want_os:
+              runtimes = [r for r in runtimes if r["version"] == want_os]
+              if not runtimes:
+                  fail(f"ios_simulator_os '{want_os}' is not an available iOS runtime on this image.")
+
+          chosen = None
+          skipped = []
+          for rt in runtimes:
+              devs = [d for d in data.get("devices", {}).get(rt["identifier"], [])
+                      if d.get("isAvailable") is True]
+              if want_dev:
+                  ordered = [d for d in devs if d.get("name") == want_dev]
+              else:
+                  keyed = [(phone_key(d.get("name", "")), d) for d in devs]
+                  keyed = [(k, d) for k, d in keyed if k is not None]
+                  keyed.sort(key=lambda t: t[0], reverse=True)
+                  ordered = [d for _, d in keyed]
+              if ordered:
+                  chosen = (ordered[0]["name"], rt["version"])
+                  break
+              if not want_dev:
+                  skipped.append(rt["version"])
+
+          if chosen is None:
+              fail(f"No matching iPhone simulator found (device='{want_dev or 'auto'}', "
+                   f"os='{want_os or 'auto'}'). Check the runner image and xcode_version.")
+
+          for v in skipped:
+              print(f"::warning::Skipped iOS {v}: no ranked iPhone simulator on that runtime.")
+
+          with open(out, "w") as f:
+              f.write(chosen[0] + "\n" + chosen[1] + "\n" + ",".join(skipped) + "\n")
+          PY
+          {
+            read -r SIM_NAME
+            read -r SIM_VER
+            read -r SKIPPED
+          } < "$SIM_RESOLVED"
+          if [ -z "$SIM_NAME" ] || [ -z "$SIM_VER" ]; then
+            echo "::error::Simulator resolution returned an incomplete result."
+            exit 1
+          fi
+          DEST="platform=iOS Simulator,name=${SIM_NAME},OS=${SIM_VER}"
+          echo "SIM_RESOLVED_DESTINATION=${DEST}" >> "$GITHUB_ENV"
+          if [ -n "${SIM_DEVICE}${SIM_OS}" ]; then MODE="explicit override (empty fields auto-detected)"; else MODE="auto-detected"; fi
+          {
+            echo "## Simulator destination"
+            echo ""
+            echo "- Destination: \`${DEST}\`"
+            echo "- Source: \`xcrun simctl list -j runtimes devices available\`"
+            echo "- Selection: ${MODE}"
+            if [ -n "$SKIPPED" ]; then echo "- Skipped newer iOS runtimes (no ranked iPhone): ${SKIPPED}"; fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
       - name: Fetch SwiftLint config
         run: |
-          curl -fsSL \
-            "https://raw.githubusercontent.com/Syzygy-Hub/.github/${{ inputs.org_config_sha }}/engineering/tooling/ios/.swiftlint.yml" \
-            -o .swiftlint.yml
+          set -eu
+          # SPM: always refresh (existing behaviour). Xcode: keep a repo-owned config.
+          if [ "$PROJECT_TYPE" = "spm" ] || [ ! -f .swiftlint.yml ]; then
+            curl -fsSL \
+              "https://raw.githubusercontent.com/Syzygy-Hub/.github/${ORG_CONFIG_SHA}/engineering/tooling/ios/.swiftlint.yml" \
+              -o .swiftlint.yml
+          else
+            echo "Repo has .swiftlint.yml; keeping it."
+          fi
 
       - name: Install SwiftLint
-        run: brew install swiftlint
+        run: |
+          set -eu
+          # Pinned by version: the release tag is part of the URL. The release publishes
+          # no checksum asset (checked: .sha256 returns 404), so no checksum is verified.
+          SL_DIR="$RUNNER_TEMP/swiftlint-${SWIFTLINT_VERSION}"
+          rm -rf "$SL_DIR"
+          mkdir -p "$SL_DIR/bin"
+          curl -fsSL \
+            "https://github.com/realm/SwiftLint/releases/download/${SWIFTLINT_VERSION}/portable_swiftlint.zip" \
+            -o "$SL_DIR/swiftlint.zip"
+          unzip -o -q "$SL_DIR/swiftlint.zip" -d "$SL_DIR/bin"
+          echo "$SL_DIR/bin" >> "$GITHUB_PATH"
+          ACTUAL=$("$SL_DIR/bin/swiftlint" version)
+          if [ "$ACTUAL" != "$SWIFTLINT_VERSION" ]; then
+            echo "::error::SwiftLint version mismatch: installed '$ACTUAL', expected '$SWIFTLINT_VERSION'."
+            exit 1
+          fi
+          echo "SwiftLint $ACTUAL installed."
 
       - name: Lint
         run: swiftlint --config .swiftlint.yml
 
-      - name: Build
+      - name: Cache SwiftPM build
+        if: ${{ inputs.project_type == 'spm' }}
+        uses: actions/cache@v4
+        with:
+          path: ${{ inputs.working_directory }}/.build
+          key: ${{ runner.os }}-spm-${{ hashFiles('**/Package.resolved', '**/Package.swift') }}
+          restore-keys: |
+            ${{ runner.os }}-spm-
+
+      - name: Cache Xcode DerivedData
+        if: ${{ inputs.project_type == 'xcode' }}
+        uses: actions/cache@v4
+        with:
+          path: ~/Library/Developer/Xcode/DerivedData
+          key: ${{ runner.os }}-xcode-${{ hashFiles('**/Package.resolved', '**/*.xcodeproj/project.pbxproj', '**/*.xcworkspace/xcshareddata/swiftpm/Package.resolved') }}
+          restore-keys: |
+            ${{ runner.os }}-xcode-
+
+      - name: Build (SPM)
+        if: ${{ inputs.project_type == 'spm' }}
         run: swift build
 
-      - name: Test with coverage
-        if: ${{ inputs.coverage }}
+      - name: Build (Xcode)
+        if: ${{ inputs.project_type == 'xcode' }}
         run: |
-          swift test --enable-code-coverage
+          set -eu
+          if [ -n "$XC_WORKSPACE" ]; then CONTAINER=(-workspace "$XC_WORKSPACE"); else CONTAINER=(-project "$XC_PROJECT"); fi
+          # xcodebuild_extra_args: whitespace-split into an array; no quoting, no globbing.
+          EXTRA=()
+          if [ -n "$XC_EXTRA_ARGS" ]; then read -ra EXTRA <<< "$XC_EXTRA_ARGS"; fi
+          xcodebuild build \
+            "${CONTAINER[@]}" \
+            -scheme "$XC_SCHEME" \
+            -destination "$SIM_RESOLVED_DESTINATION" \
+            CODE_SIGNING_ALLOWED=NO \
+            ${EXTRA[@]+"${EXTRA[@]}"}
 
-          # Locate profdata dynamically — works for any package name
-          PROFDATA=$(find .build -name "default.profdata" | head -1)
+      - name: Test (SPM)
+        if: ${{ inputs.project_type == 'spm' }}
+        run: |
+          # pipefail: a failing `swift test` fails the step even though output is teed.
+          set -o pipefail
+          mkdir -p .build/reports
+          ARGS=()
+          if [ "$COVERAGE" = "true" ]; then
+            # .build is restored from cache, so coverage files from earlier runs may be
+            # present. Delete them first; the coverage step only reads profdata newer than
+            # the marker touched below, so only this run's output is reported.
+            find .build -path .build/reports -prune -o \( -name '*.profdata' -o -name '*.profraw' \) -delete
+            find .build -path .build/reports -prune -o -type d -name codecov -prune -exec rm -rf {} +
+            ARGS+=(--enable-code-coverage)
+          fi
+          touch .build/reports/.swift-test-start
+          swift test "${ARGS[@]}" 2>&1 | tee .build/reports/swift-test.log
+
+      - name: Test (Xcode)
+        if: ${{ inputs.project_type == 'xcode' }}
+        run: |
+          set -eu
+          if [ -n "$XC_WORKSPACE" ]; then CONTAINER=(-workspace "$XC_WORKSPACE"); else CONTAINER=(-project "$XC_PROJECT"); fi
+          RESULT=".build/reports/TestResults.xcresult"
+          mkdir -p .build/reports
+          rm -rf "$RESULT"
+          if [ "$COVERAGE" = "true" ]; then COV=YES; else COV=NO; fi
+          # xcodebuild_extra_args: whitespace-split into an array; no quoting, no globbing.
+          EXTRA=()
+          if [ -n "$XC_EXTRA_ARGS" ]; then read -ra EXTRA <<< "$XC_EXTRA_ARGS"; fi
+          xcodebuild test \
+            "${CONTAINER[@]}" \
+            -scheme "$XC_SCHEME" \
+            -destination "$SIM_RESOLVED_DESTINATION" \
+            -enableCodeCoverage "$COV" \
+            -resultBundlePath "$RESULT" \
+            CODE_SIGNING_ALLOWED=NO \
+            ${EXTRA[@]+"${EXTRA[@]}"}
+
+      - name: Test results summary
+        if: ${{ always() }}
+        run: |
+          set -u
+          {
+            echo "## Test results ($PROJECT_TYPE)"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$PROJECT_TYPE" = "spm" ]; then
+            # Reads both frameworks. XCTest prints "Executed N tests, with M failures ..."
+            # (the last line is the 'All tests' aggregate). Swift Testing prints
+            # "Test run with N tests in M suites passed|failed ...". A package with only
+            # Swift Testing still prints "Executed 0 tests" for XCTest, which is skipped.
+            # Parsing is tolerant here: the test step's exit status is what fails the job.
+            LOG=".build/reports/swift-test.log"
+            if [ ! -f "$LOG" ]; then
+              echo "No swift test log found." >> "$GITHUB_STEP_SUMMARY"
+            else
+              python3 - "$LOG" <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import re, sys
+          text = open(sys.argv[1], errors="replace").read()
+          xc = re.findall(r"Executed (\d+) tests?, with (\d+) failures? \((\d+) unexpected\)", text)
+          st = re.findall(r"Test run with (\d+) tests? in (\d+) suites? (passed|failed)", text)
+          if xc and (int(xc[-1][0]) > 0 or not st):
+              n, f, u = xc[-1]
+              print(f"- XCTest: {n} executed, {f} failed ({u} unexpected)")
+          if st and (int(st[-1][0]) > 0 or not xc):
+              n, s, res = st[-1]
+              print(f"- Swift Testing: {n} tests in {s} suites, {res}")
+          if not xc and not st:
+              print("No test-count line found in swift test output.")
+          PY
+            fi
+          else
+            RESULT=".build/reports/TestResults.xcresult"
+            if [ -d "$RESULT" ] && xcrun xcresulttool get test-results summary --path "$RESULT" --compact > .build/reports/test-summary.json 2>/dev/null; then
+              python3 - <<'PY' >> "$GITHUB_STEP_SUMMARY"
+          import json
+          d = json.load(open(".build/reports/test-summary.json"))
+          print(f"- Total: {d.get('totalTestCount')}")
+          print(f"- Passed: {d.get('passedTests')}")
+          print(f"- Failed: {d.get('failedTests')}")
+          print(f"- Skipped: {d.get('skippedTests')}")
+          PY
+            else
+              echo "No result bundle or summary available." >> "$GITHUB_STEP_SUMMARY"
+            fi
+          fi
+
+      - name: Coverage report (SPM)
+        if: ${{ inputs.coverage && inputs.project_type == 'spm' }}
+        run: |
+          {
+            echo "## Coverage Report"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          # Only profdata written by this run: newer than the marker that the Test step
+          # touched right before `swift test`. Stale files were deleted there as well.
+          PROFDATA=$(find .build -name "default.profdata" -newer .build/reports/.swift-test-start | head -1)
           if [ -z "$PROFDATA" ]; then
-            echo "No profdata found — skipping coverage report"
+            echo "::warning::No profdata found; coverage report skipped."
+            echo "No coverage data found; report skipped." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
-
-          # Find all test binaries
           BINARIES=$(find .build/debug -name "*.xctest" -path "*/Contents/MacOS/*" 2>/dev/null | head -5)
           if [ -z "$BINARIES" ]; then
-            # SPM on Linux — test binary is a plain executable
             BINARIES=$(find .build/debug -name "*PackageTests" -type f 2>/dev/null | head -1)
           fi
-
-          if [ -n "$BINARIES" ]; then
-            echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
-            for BIN in $BINARIES; do
-              xcrun llvm-cov report "$BIN" \
-                -instr-profile "$PROFDATA" \
-                --ignore-filename-regex='\.build|Tests' \
-                >> "$GITHUB_STEP_SUMMARY" 2>/dev/null || true
-            done
-          else
-            echo "## Coverage Report" >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$BINARIES" ]; then
+            echo "::warning::No test binaries found; coverage report skipped."
             echo "Coverage data generated at: $PROFDATA" >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          for BIN in $BINARIES; do
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            # Reporting is tolerant: tests have already passed in the Test step.
+            if ! xcrun llvm-cov report "$BIN" \
+                -instr-profile "$PROFDATA" \
+                --ignore-filename-regex='\.build|Tests' >> "$GITHUB_STEP_SUMMARY" 2>&1; then
+              echo "::warning::llvm-cov report failed for $BIN"
+            fi
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          done
+
+      - name: Coverage report (Xcode)
+        if: ${{ inputs.coverage && inputs.project_type == 'xcode' }}
+        run: |
+          {
+            echo "## Coverage Report"
+            echo ""
+          } >> "$GITHUB_STEP_SUMMARY"
+          RESULT=".build/reports/TestResults.xcresult"
+          # Reporting is tolerant: tests have already passed in the Test step.
+          if [ -d "$RESULT" ] && xcrun xccov view --report --only-targets "$RESULT" > .build/reports/coverage.txt 2>&1; then
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+            cat .build/reports/coverage.txt >> "$GITHUB_STEP_SUMMARY"
+            echo '```' >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Coverage report unavailable (no result bundle or xccov failed)."
+            echo "Coverage report unavailable." >> "$GITHUB_STEP_SUMMARY"
           fi
 
-      - name: Test without coverage
-        if: ${{ !inputs.coverage }}
-        run: swift test
-
       - name: Upload test artifacts
-        if: always() && inputs.upload_artifacts
+        if: ${{ always() && inputs.upload_artifacts }}
         uses: actions/upload-artifact@v4
         with:
           name: test-artifacts
-          path: .build/reports/
+          path: ${{ inputs.working_directory }}/.build/reports/
           if-no-files-found: warn

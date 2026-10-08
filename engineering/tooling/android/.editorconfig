@@ -27,6 +27,14 @@ ktlint_standard_max-line-length = enabled
 ktlint_standard_final-newline = enabled
 ktlint_standard_no-trailing-spaces = enabled
 
+# Jetpack Compose: @Composable functions are named in PascalCase by convention,
+# so the function-naming rule must skip them. Upstreamed from individual Android
+# repos. Verified against the ktlint 1.x property name; confirm on the ktlint
+# version used by the consuming build (ktlint Gradle plugin 12.1.2 in syzygy-ui-android).
+# The property name was taken from secondary sources (web search), not from the ktlint
+# release notes of the pinned version. Run ktlint against a PascalCase @Composable to confirm.
+ktlint_function_naming_ignore_when_annotated_with = Composable
+
 # Trailing commas are optional stylistic preference in Kotlin; disabled so
 # generated/multi-line call sites aren't forced one way or the other.
 ktlint_standard_trailing-comma-on-call-site = disabled

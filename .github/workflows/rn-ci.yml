@@ -144,7 +144,7 @@ jobs:
       # when a lockfile exists. Two mutually exclusive steps keep it valid.
       - name: Set up Node (npm cache)
         if: ${{ steps.lock.outputs.has_lock == 'true' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ needs.resolve.outputs.node-version }}
           cache: npm
@@ -152,7 +152,7 @@ jobs:
 
       - name: Set up Node (no cache, no lockfile)
         if: ${{ steps.lock.outputs.has_lock != 'true' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ needs.resolve.outputs.node-version }}
 
@@ -280,7 +280,7 @@ jobs:
           java-version: ${{ inputs.native_java_version }}
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ needs.resolve.outputs.node-version }}
 
@@ -320,7 +320,7 @@ jobs:
           fi
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ needs.resolve.outputs.node-version }}
 

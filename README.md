@@ -1,3 +1,10 @@
+[![Version](https://img.shields.io/badge/version-3.0.0-D85A30?style=flat)](profile/README.md)
+[![iOS](https://img.shields.io/badge/iOS-Swift-FA7343?style=flat&logo=swift&logoColor=white)](profile/README.md#platform-targets)
+[![Android](https://img.shields.io/badge/Android-Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white)](profile/README.md#platform-targets)
+[![React Native](https://img.shields.io/badge/React%20Native-TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](profile/README.md#platform-targets)
+[![Flutter](https://img.shields.io/badge/Flutter-Dart-0175C2?style=flat&logo=dart&logoColor=white)](profile/README.md#platform-targets)
+[![Repos](https://img.shields.io/badge/repos-25-2F6FED?style=flat&logo=github&logoColor=white)](https://github.com/orgs/Syzygy-Hub/repositories)
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
   <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
@@ -7,30 +14,30 @@
 
 Shared infrastructure for the Syzygy ecosystem: reusable CI and release workflows, engineering standards, lint tooling, templates and the ecosystem feed.
 
-[![Version](https://img.shields.io/badge/version-3.0.0-2F6FED?style=flat)](profile/README.md)
-[![Platforms](https://img.shields.io/badge/platforms-iOS%20%C2%B7%20Android%20%C2%B7%20RN%20%C2%B7%20Flutter-2F6FED?style=flat)](profile/README.md)
-[![Repos](https://img.shields.io/badge/repos-25-2F6FED?style=flat)](https://github.com/orgs/Syzygy-Hub/repositories)
-
 ## What is Syzygy
 
-Syzygy is a set of layered libraries shared across four platforms: iOS (Swift), Android (Kotlin), React Native (TypeScript) and Flutter (Dart). Each layer has one job and depends only on the layers below it. The organisation has 25 repositories: 24 platform repositories (6 layers x 4 platforms) and this Hub.
+Syzygy is a set of layered libraries shared across four platforms: iOS (Swift), Android (Kotlin), React Native (TypeScript) and Flutter (Dart). Foundation is the shared base of every layer. UI, Core, Services and AI each depend only on Foundation, never on each other. The organisation has 25 repositories: 24 platform repositories (6 layers x 4 platforms) and this Hub.
 
 ## Architecture at a glance
 
-```mermaid
-flowchart BT
-  Foundation --> Core --> Services --> AI --> UI
-  Foundation --> Services
-  Foundation --> UI
-  Core --> UI
-  Base[Base: composes all layers] -.-> Foundation
-  Base -.-> Core
-  Base -.-> Services
-  Base -.-> AI
-  Base -.-> UI
+```
+                                     syzygy-foundation-*
+                                              |
+      +-------------------+-------------------+-------------------+-------------------+
+      |                   |                                       |                   |
+      v                   v                                       v                   v
+ syzygy-ui-*        syzygy-core-*                         syzygy-services-*      syzygy-ai-*
+      |                   |                                       |                   |
+      +-------------------+-------------------+-------------------+-------------------+
+                                              |
+                                              v
+                              syzygy-base-* (composer/scaffold)
+                                              |
+                                              v
+                                    Syzygy Example App
 ```
 
-The full dependency rules are in [`engineering/architecture/syzygy-ecosystem.md`](engineering/architecture/syzygy-ecosystem.md). The per-platform version matrix is in [`profile/README.md`](profile/README.md#version-matrix) and generated from [`ecosystem/feed.json`](ecosystem/feed.json).
+Base is the only composer of the full stack. The full dependency rules are in [`engineering/architecture/syzygy-ecosystem.md`](engineering/architecture/syzygy-ecosystem.md). The per-platform version matrix is in [`profile/README.md`](profile/README.md#version-matrix) and generated from [`ecosystem/feed.json`](ecosystem/feed.json).
 
 ## What's in this repo
 

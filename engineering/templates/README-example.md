@@ -1,14 +1,14 @@
+<!-- TODO: CI badge. Replace the workflow file name and owner once the repository exists. -->
+[![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-example-{platform}/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-example-{platform}/actions/workflows/ci.yml)
+
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
   <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
 </picture>
 
-<!-- TEMPLATE. Copy to the root of syzygy-example-{platform} as README.md and replace every {placeholder}. Standard: engineering/standards/example-apps-standard.md -->
-
 # syzygy-example-{platform}
 
-<!-- TODO: CI badge. Replace the workflow file name and owner once the repository exists. -->
-[![CI](https://img.shields.io/github/actions/workflow/status/Syzygy-Hub/syzygy-example-{platform}/ci.yml?label=ci&style=flat)](https://github.com/Syzygy-Hub/syzygy-example-{platform}/actions/workflows/ci.yml)
+<!-- TEMPLATE. Copy to the root of syzygy-example-{platform} as README.md and replace every {placeholder}. Standard: engineering/standards/example-apps-standard.md -->
 
 {One sentence: what this example app shows, no emoji.}
 

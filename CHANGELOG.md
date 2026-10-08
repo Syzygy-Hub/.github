@@ -24,7 +24,7 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Added
 
-- Added `engineering/tooling/banner-guard/check_banner.py`, a read-only check that fails when a required doc does not open with the canonical banner. It runs as an extra step in `ecosystem-drift.yml`; the workflow's triggers and permissions are unchanged.
+- Added `engineering/tooling/banner-guard/check_banner.py`, a read-only check of the canonical banner. README-type files (root `README.md`, `profile/README.md`, `engineering/templates/README-*.md`) must have badge lines, then the banner, then the H1. Other required docs must open with the banner. It runs as an extra step in `ecosystem-drift.yml`; the workflow's triggers and permissions are unchanged.
 - Added `.github/workflows/lint-workflows.yml`, which runs actionlint (pinned 1.7.7, checksum-verified) on Hub workflows, and `.github/dependabot.yml` for GitHub Actions updates in this repo. Neither affects callers.
 - Added `app-release.yml`, the release workflow for apps and templates. It validates the tag and `syzygy.yml`, extracts the CHANGELOG section and creates a GitHub Release. It never publishes to a registry.
   - Callers affected: none. New app repositories use `release-app-{ios,android,rn,flutter}.yml.template`.
@@ -49,7 +49,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### Changed
 
-- Changed every human-facing Markdown doc to open with the same canonical `<picture>` banner (width 600). Exempt: issue and pull request templates, YAML, CODEOWNERS and dependabot templates.
+- Changed the Markdown docs to use the same canonical `<picture>` banner (width 600). README-type files open with their badge row, then the banner, matching the readme standard's section order. Other docs open with the banner. Exempt: issue and pull request templates, YAML, CODEOWNERS and dependabot templates.
+- Changed the root `README.md` architecture section to the ASCII diagram used in `profile/README.md`. Removed the AI-layer legend line and the `✦` markers that only supported it.
 - Changed the root `README.md` to a shorter, repo-focused structure. Its release description now matches the workflows: release workflows create GitHub Releases and do not publish; callers publish.
 - Changed the caller templates: iOS templates use `project_type` `spm` or `xcode` (not `library` or `app`); the RN app template uses `node_version_from_engines` with `22` as fallback; undeclared inputs were removed.
   - Callers affected: none. Templates are not live callers.

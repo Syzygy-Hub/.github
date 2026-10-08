@@ -1,14 +1,14 @@
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
-  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
-</picture>
-
 [![iOS](https://img.shields.io/badge/iOS-Swift-FA7343?style=flat&logo=swift&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-ios)
 [![Android](https://img.shields.io/badge/Android-Kotlin-7F52FF?style=flat&logo=kotlin&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-android)
 [![React Native](https://img.shields.io/badge/React%20Native-TypeScript-3178C6?style=flat&logo=typescript&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-rn)
 [![Flutter](https://img.shields.io/badge/Flutter-Dart-0175C2?style=flat&logo=dart&logoColor=white)](https://github.com/Syzygy-Hub/syzygy-ui-flutter)
 [![Repos](https://img.shields.io/badge/Repos-25-2F6FED?style=flat&logo=github&logoColor=white)](https://github.com/orgs/Syzygy-Hub/repositories)
 [![License](https://img.shields.io/badge/License-MIT-green?style=flat)](https://github.com/Syzygy-Hub/.github/blob/main/LICENSE)
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-dark-1200.png">
+  <img src="https://raw.githubusercontent.com/Syzygy-Hub/.github/main/brand/assets/banners/syzygy-banner-light-1200.png" alt="Syzygy" width="600">
+</picture>
 
 # Engineering Ecosystem for Intelligent Applications
 
@@ -35,8 +35,6 @@ The name comes from the astronomical term for when celestial bodies align — re
                                     Syzygy Example App
 ```
 
-`✦` marks the new AI layer — the centrepiece of the framework's evolution.
-
 ## Layers
 
 | Layer | Platforms | Status | Description |
@@ -45,7 +43,7 @@ The name comes from the astronomical term for when celestial bodies align — re
 | **UI** | iOS · Android · RN · Flutter | v3.0.0 ✅ | Cross-platform design system, `SyzygyTheme`, runtime theme switching |
 | **Core** | iOS · Android · RN · Flutter | v3.0.0 ✅ | Business logic contracts, state management |
 | **Services** | iOS · Android · RN · Flutter | v3.0.0 ✅ | Networking, auth, storage implementations |
-| **AI** ✦ | iOS · Android · RN · Flutter | v3.0.0 ✅ | LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager — contracts only |
+| **AI** | iOS · Android · RN · Flutter | v3.0.0 ✅ | LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager — contracts only |
 | **Base** | iOS · Android · RN · Flutter | v3.0.0 ✅ | Opinionated starter that composes all layers |
 | **Examples** | iOS · Android · RN · Flutter | Planned 🔲 | Reference implementation of the full stack |
 
@@ -110,7 +108,7 @@ Registry publishing is platform-specific. Flutter publishes to pub.dev inside `f
 - [syzygy-services-rn](https://github.com/Syzygy-Hub/syzygy-services-rn) — Networking, auth and storage implementations · v3.0.0
 - [syzygy-services-flutter](https://github.com/Syzygy-Hub/syzygy-services-flutter) — Networking, auth and storage implementations · v3.0.0
 
-### AI ✦
+### AI
 - [syzygy-ai-ios](https://github.com/Syzygy-Hub/syzygy-ai-ios) — AI contracts for iOS — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v3.0.0
 - [syzygy-ai-android](https://github.com/Syzygy-Hub/syzygy-ai-android) — AI contracts for Android — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v3.0.0
 - [syzygy-ai-rn](https://github.com/Syzygy-Hub/syzygy-ai-rn) — AI contracts for React Native — LLMProvider, AgentProtocol, RAGProvider, EmbeddingProvider, MemoryManager · v3.0.0

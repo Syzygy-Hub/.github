@@ -60,7 +60,7 @@ The ecosystem has 24 platform repositories (6 layers x 4 platforms: iOS, Android
 - **Provides** (iOS, verified in source): `URLSessionNetworkClient` (an implementation of `NetworkClientProtocol`); `JWTAuthProvider` and `SyzygyAuthProvider` (implementations of `AuthProvider`); `KeychainStorageProvider` and `UserDefaultsStorageProvider` (implementations of `StorageProvider`). Other platforms follow the same pattern; they were not re-checked in this pass.
 - **Status**: 3.0.0 shipped.
 
-### syzygy-ai-* (AI centrepiece)
+### syzygy-ai-*
 
 - **Role**: AI abstraction layer. Contracts only; no concrete provider ships in these repositories.
 - **Position**: Peer sibling. Depends only on Foundation contracts, **not** on Core or Services.

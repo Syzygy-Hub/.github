@@ -189,7 +189,7 @@ jobs:
       ORG_CONFIG_SHA: ${{ inputs.org_config_sha }}
       COVERAGE: ${{ inputs.coverage }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - name: Validate inputs
         run: |

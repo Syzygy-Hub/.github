@@ -79,10 +79,12 @@ if the team actually merges into them. Confirm the plan supports the ruleset typ
 **Scope:** all 24 platform repos and the Hub repo.
 **Status: not applied by Hub files.**
 
-- [ ] Enable Dependabot alerts on every repo.
+- [x] Enable Dependabot alerts on every repo (enabled at org level, per the owner).
 - [ ] Enable Dependabot security updates on every repo.
 - [ ] Note: `engineering/templates/dependabot.yml.template` covers version updates in caller repos. It is
       a separate file and is not enabled by this item.
+- Note: the Hub repo has no Dependabot version-update config. Action-version updates in the Hub are
+  manual and are planned for the 3.5.0 Hub update.
 
 ## 5. GitHub Pages (website, if used)
 

@@ -37,7 +37,7 @@ No peer layer depends on another peer. Only Base composes the stack. A change th
 ## Pull requests
 
 1. Open a pull request into `main`.
-2. CI must pass on the pull request. The CI workflow is the same one the release gate checks.
+2. CI must pass on the pull request. A repo that adopts the opt-in `ci-gate.yml` gates its releases on this same CI workflow; existing release callers are not gated.
 3. Update `CHANGELOG.md` under `[Unreleased]`. Do not edit released sections.
 4. Use the pull request template. Describe the change, the layer, and any API impact.
 5. A reviewer approves, then the pull request is merged.

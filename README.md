@@ -16,7 +16,7 @@ Shared infrastructure for the Syzygy ecosystem: reusable CI and release workflow
 
 ## What is Syzygy
 
-Syzygy is a set of layered libraries shared across four platforms: iOS (Swift), Android (Kotlin), React Native (TypeScript) and Flutter (Dart). Foundation is the shared base of every layer. UI, Core, Services and AI each depend only on Foundation, never on each other. The organisation has 25 repositories: 24 platform repositories (6 layers x 4 platforms) and this Hub.
+Syzygy is a set of layered libraries, plus the Base app that composes them, shared across four platforms: iOS (Swift), Android (Kotlin), React Native (TypeScript) and Flutter (Dart). Foundation is the shared base of every layer. UI, Core, Services and AI each depend only on Foundation, never on each other. The organisation has 25 repositories: 24 platform repositories (6 layers x 4 platforms) and this Hub.
 
 ## Architecture at a glance
 

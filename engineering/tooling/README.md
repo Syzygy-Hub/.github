@@ -197,6 +197,6 @@ The hook runs locally on every push, using the same lint configs and rules docum
 
 ## Updating Lint Rules
 
-To update a lint rule, edit the relevant file in this folder and commit to `main`. All consuming repos pick up the change automatically on their next CI run, since configs are always fetched from `main`.
+To update a lint rule, edit the relevant file in this folder and commit to `main`. Consuming repos pick up the change on their next CI run, because CI fetches the configs from `main` (the `org_config_sha` default). Exceptions: a repo's own `.editorconfig` (Android), a repo's own `.swiftlint.yml` in `xcode` mode (iOS), and `use_local_analysis_options: true` (Flutter) keep the local file.
 
 When a rule changes severity (e.g. from warning to error), note it in a commit message and check that it won't silently break currently-green CI runs in consuming repos.

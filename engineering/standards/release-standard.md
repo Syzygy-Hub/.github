@@ -84,7 +84,7 @@ Summary:
 - No `v` prefix in version headers — `[1.0.0]` not `[v1.0.0]`
 - Date format: `YYYY-MM-DD`
 - Include only sections with entries: `Added` | `Changed` | `Fixed` | `Removed`
-- The release workflow extracts the first versioned section from `CHANGELOG.md` — the `[X.X.X]` section must exist and be populated before pushing the tag
+- The release workflow extracts the `## [X.X.X]` section matching the tag from `CHANGELOG.md` — it must exist and be populated before pushing the tag, or the release fails (unless the caller sets `allow_empty_notes: true`)
 
 ---
 

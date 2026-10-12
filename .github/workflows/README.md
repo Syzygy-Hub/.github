@@ -50,6 +50,7 @@ Callers pin the Hub ref in `uses:`, for example `uses: Syzygy-Hub/.github/.githu
 | `xcode_version` | string | `''` | all | Xcode `major.minor` (e.g. `16.2`). Empty keeps the runner default. Otherwise the step selects `/Applications/Xcode_<version>.app` and checks it with `xcodebuild -version`. The job fails if that Xcode is not installed on the image. |
 | `ios_simulator_device` | string | `''` | `project_type: xcode` | Simulator device name. Empty means auto-detect. |
 | `ios_simulator_os` | string | `''` | `project_type: xcode` | Simulator iOS version. Empty means auto-detect. Must be installed on the runner image. |
+| `xcodebuild_extra_args` | string | `''` | `project_type: xcode` | Extra `xcodebuild` arguments for the build and test commands. Whitespace-split, no quoting. Example: `-skipPackagePluginValidation`. |
 | `swiftlint_version` | string | `0.59.1` | all | SwiftLint release downloaded from GitHub Releases (`portable_swiftlint.zip`). The installed `swiftlint version` must equal this value. The release publishes no checksum asset, so the pin is by version only. |
 
 **Simulator auto-detect (`project_type: xcode`, both fields empty):** the step selects the newest iOS runtime available to the chosen Xcode, then the newest iPhone on that runtime (highest generation, then Pro Max > Pro > Plus > base). Setting one field keeps the other on auto. Explicit values must be installed on the image. The resolved destination is written to the job summary. The job fails with `::error::` if no matching iPhone is found. With `project_type: spm`, no simulator is selected.
@@ -248,7 +249,7 @@ All five release workflows share one flow:
 1. **`validate`** checks the tag and `syzygy.yml`, and for Flutter also `pub_auth`. It requests `contents: read` only and never receives secrets.
 2. **`release`** (`needs: validate`) extracts the CHANGELOG entry, asserts `pubspec.yaml` (Flutter), publishes where applicable, creates the GitHub Release and, if configured, notifies a website repo. It requests `contents: write`. Flutter also requests `id-token: write`, which is inert unless `pub_auth: oidc`. The other workflows request no `id-token`.
 
-Each caller's own `release.yml` owns the `push: tags` trigger and calls the Hub workflow with `secrets: inherit`. The caller grants `contents: write` (and `id-token: write` for Flutter) at workflow level. All 20 release callers already do. The audit is in `_audit/step1/RELEASE-PERMISSIONS.md`.
+Each caller's own `release.yml` owns the `push: tags` trigger and calls the Hub workflow with `secrets: inherit`. The caller grants `contents: write` (and `id-token: write` for Flutter) at workflow level. All 20 release callers already do.
 
 **Compatibility.** The release workflows have no `ci_gate` or `skip_ci_gate` input and do not check CI. `ci_workflow_name` is still accepted and ignored, so existing callers do not break. Any input not listed in the table below is rejected by GitHub when the workflow starts, so callers must pass only listed inputs.
 

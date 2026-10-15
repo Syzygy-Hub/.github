@@ -117,7 +117,6 @@ jobs:
           flutter-version: ${{ inputs.flutter_version }}
           cache: true
 
-      # --- Dart setup (pure-Dart repos only) ---
       - name: Set up Dart (latest stable)
         if: ${{ needs.detect.outputs.type == 'dart' && inputs.dart_sdk_version == '' }}
         uses: dart-lang/setup-dart@v1
@@ -128,7 +127,6 @@ jobs:
         with:
           sdk: ${{ inputs.dart_sdk_version }}
 
-      # --- Pub cache ---
       - name: Cache pub packages
         uses: actions/cache@v4
         with:
@@ -170,7 +168,6 @@ jobs:
             echo "source=hub-${SUBDIR}" >> "$GITHUB_OUTPUT"
           fi
 
-      # --- Install dependencies ---
       - name: Install dependencies (Flutter)
         if: ${{ needs.detect.outputs.type == 'flutter' }}
         shell: bash
@@ -183,7 +180,6 @@ jobs:
         working-directory: ${{ inputs.working_directory }}
         run: dart pub get
 
-      # --- Analyze ---
       - name: Analyze (Flutter)
         if: ${{ needs.detect.outputs.type == 'flutter' }}
         shell: bash

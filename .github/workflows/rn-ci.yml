@@ -221,11 +221,13 @@ jobs:
         shell: bash
         working-directory: ${{ inputs.working_directory }}
         run: |
-          # Capture npm's exit code (not tee's) so failing tests fail the job.
+          # No pipe: npm's exit code is captured directly, so a failing test always fails the job.
+          # Output goes to a file and is then printed, so nothing can mask the status.
           set +e
-          npm test -- --coverage --coverageReporters=text-summary 2>&1 | tee coverage-output.txt
-          status=${PIPESTATUS[0]}
+          npm test -- --coverage --coverageReporters=text-summary > coverage-output.txt 2>&1
+          status=$?
           set -e
+          cat coverage-output.txt
           {
             echo "## Coverage Report"
             if grep -q "Coverage summary" coverage-output.txt; then

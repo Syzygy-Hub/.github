@@ -141,14 +141,12 @@ Registry publishing is platform-specific. Flutter publishes to pub.dev inside `f
 <!-- Generated from ecosystem/feed.json by engineering/tooling/ecosystem-feed/check_drift.py. Do not edit by hand. -->
 | Layer | iOS | Android | React Native | Flutter |
 |---|---|---|---|---|
-| Foundation | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-| UI | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-| Core | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-| Services | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-| AI | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-| Base | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) | 3.0.0 (shipped) |
-
-Hub repository (`.github`): version not recorded, status unknown.
+| Foundation | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
+| UI | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
+| Core | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
+| Services | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
+| AI | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
+| Base | 3.0.0 | 3.0.0 | 3.0.0 | 3.0.0 |
 <!-- ECOSYSTEM:END -->
 
 ## Ecosystem feed and drift rule

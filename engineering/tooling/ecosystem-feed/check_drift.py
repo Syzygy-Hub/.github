@@ -116,21 +116,15 @@ def render_block(feed):
         "| Layer | " + " | ".join(gf.PLATFORM_LABEL[p] for p in gf.PLATFORM_ORDER) + " |",
         "|---|" + "---|" * len(gf.PLATFORM_ORDER),
     ]
-    hub = None
     for layer in feed["layers"]:
         if layer["layer"] == gf.HUB_LAYER:
-            hub = layer["platforms"][0]["repos"][0]
             continue
         cells = {}
         for plat in layer["platforms"]:
             repo = plat["repos"][0]
-            cells[plat["platform"]] = "%s (%s)" % (repo["version"], repo["status"])
+            cells[plat["platform"]] = repo["version"]
         row = [gf.LAYER_LABEL[layer["layer"]]] + [cells[p] for p in gf.PLATFORM_ORDER]
         lines.append("| " + " | ".join(row) + " |")
-    if hub is not None:
-        version = hub["version"] if hub["version"] is not None else "not recorded"
-        lines.append("")
-        lines.append("Hub repository (`%s`): version %s, status %s." % (hub["repo_url"].split("/")[-1], version, hub["status"]))
     return "\n".join(lines)
 
 

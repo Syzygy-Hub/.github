@@ -99,7 +99,7 @@ Field rules:
 
 Each example must demonstrate **all six layers** on its platform. A layer is demonstrated when at least one user-visible flow exercises that layer's public API.
 
-Every cell below is currently **to be implemented**. No example repository exists yet, so no cell is complete.
+No example repository exists yet.
 
 | Layer | iOS (`syzygy-example-ios`) | Android (`syzygy-example-android`) | RN (`syzygy-example-rn`) | Flutter (`syzygy-example-flutter`) |
 |---|---|---|---|---|

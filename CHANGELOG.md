@@ -79,6 +79,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 - Changed `rn-release` template to Node 24 with no `registry-url`, matching the npm OIDC publish constraint used by real callers.
   - Callers affected: none.
 
+### Fixed
+
+- rn-ci: test failures were not failing the job; the test step now fails on any non-zero npm test exit.
+  - Callers affected: none required. RN callers whose tests fail will now go red, which is the intended behaviour.
+
 ### Removed
 
 - Removed the Hub's own `.github/dependabot.yml` (GitHub Actions version updates). It opened noisy action-bump pull requests, and every merged bump goes live for all 24 callers at once. Dependabot alerts stay enabled at org level. Action-version updates in the Hub are manual and are planned for the 3.5.0 Hub update. The per-repo template `engineering/templates/dependabot.yml.template` is unchanged.
